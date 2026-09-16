@@ -19,7 +19,6 @@ frontend/ios/
 frontend/linux/
 frontend/macos/
 frontend/windows/
-frontend/test/
 
 # ── OS & editors ──────────────────────────────────────────────────────────────
 .DS_Store
