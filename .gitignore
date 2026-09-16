@@ -1,0 +1,29 @@
+# ── Secrets ──────────────────────────────────────────────────────────────────
+**/.env
+!**/.env.example
+
+# ── Node / Backend ────────────────────────────────────────────────────────────
+backend/node_modules/
+backend/private_storage/
+backend/prisma/migrations/*.sql   # keep migrations tracked
+
+# ── Flutter / Frontend ────────────────────────────────────────────────────────
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/build/
+frontend/.packages
+frontend/pubspec.lock
+frontend/android/
+frontend/ios/
+frontend/linux/
+frontend/macos/
+frontend/windows/
+frontend/test/
+
+# ── OS & editors ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
