@@ -1,17 +1,17 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: 1. Project Setup
-- Current task: Initialize repository structure and backend/frontend scaffolding
-- Last completed task: None (Project initialized)
-- Blocking issues: None
-- Next recommended task: Set up repository structure, backend Node.js + Express, and Flutter Web frontend
+- Current phase: 2. Database
+- Current task: None – Phase 1 complete, ready for Phase 2
+- Last completed task: Phase 1 – Project Setup (backend server running, Flutter Web running, health API verified)
+- Blocking issues: PostgreSQL not yet configured locally (needed for Phase 2 Prisma migrations)
+- Next recommended task: **Phase 2** – Define full Prisma schema with all enums and entities, run first migration
 
 ## Progress Summary
 | Phase | Status | Notes |
 | :--- | :--- | :--- |
-| 1. Project Setup | NOT STARTED | |
-| 2. Database | NOT STARTED | |
+| 1. Project Setup | DONE | Backend on :4000, Flutter Web on :3000, health API live, git committed |
+| 2. Database | NOT STARTED | Needs PostgreSQL + Prisma schema |
 | 3. Authentication and Security Foundation | NOT STARTED | |
 | 4. Course Catalog Backend | NOT STARTED | |
 | 5. Flutter Core UI | NOT STARTED | |
@@ -36,15 +36,15 @@
 | 24. Final Requirement Audit | NOT STARTED | |
 
 ## 1. Project Setup
-- [ ] repository structure
-- [ ] Flutter Web frontend setup
-- [ ] Node.js + Express backend setup
-- [ ] PostgreSQL
-- [ ] Prisma
-- [ ] environment configuration
-- [ ] health API
-- [ ] Flutter API connection
-- [ ] Git initialization/checkpoint
+- [x] repository structure (`/frontend`, `/backend`, `/docs`, `/testing`, `/database`)
+- [x] Flutter Web frontend setup (Flutter 3.38.4, go_router, Riverpod, Dio – `flutter pub get` ✓)
+- [x] Node.js + Express backend setup (Node 22, Express 4.x, Helmet, CORS, rate limiting)
+- [ ] PostgreSQL (service must be running locally; not verified yet)
+- [x] Prisma (installed v6.12.0, schema.prisma initialized, prisma.js singleton created)
+- [x] environment configuration (`backend/.env` + `backend/.env.example`)
+- [x] health API (`GET /api/health` → 200 OK verified via PowerShell and browser)
+- [x] Flutter API connection (Dio client + healthRepository + healthProvider created; flutter test 1/1 PASS)
+- [x] Git initialization/checkpoint (initial commit b6b4b6d, 34 files)
 
 ## 2. Database
 - [ ] Prisma schema
@@ -364,9 +364,9 @@ Include responsive verification:
 - [ ] mobile
 
 ## 23. Documentation and Submission
-- [ ] README
+- [x] README
 - [ ] INSTALL guide
-- [ ] .env.example
+- [x] .env.example
 - [ ] database export
 - [ ] testing files
 - [ ] security checklist
