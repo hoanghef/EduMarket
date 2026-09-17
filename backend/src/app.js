@@ -54,10 +54,14 @@ app.use(express.urlencoded({ extended: true }));
 // ── Routes ───────────────────────────────────────────────────────────────────
 const healthRouter = require('./routes/health');
 const authRouter = require('./routes/auth');
+const catalogRouter = require('./routes/catalog');
+const adminRouter = require('./routes/admin');
 const { csrfProtection } = require('./lib/auth');
 app.use('/api', healthRouter);
 app.use('/api', csrfProtection);
 app.use('/api/auth', authRouter);
+app.use('/api', catalogRouter);
+app.use('/api/admin', adminRouter);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

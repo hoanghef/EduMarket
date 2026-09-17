@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: 4. Course Catalog Backend
-- Current task: None – Phase 3 complete, ready for Phase 4
-- Last completed task: Phase 3 – authentication and security foundation (auth API, CSRF, cookies, authorization, lockout and tests) verified
+- Current phase: 5. Flutter Core UI
+- Current task: None – Phase 4 complete, ready for Phase 5
+- Last completed task: Phase 4 – public catalog and protected admin content-management APIs verified
 - Blocking issues: None
-- Next recommended task: **Phase 4** – Implement category and public course catalog APIs with search, filters, sorting and pagination
+- Next recommended task: **Phase 5** – Implement Flutter app shell, responsive layout, navigation, theme and shared UI states
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -13,7 +13,7 @@
 | 1. Project Setup | DONE | Backend on :4000, Flutter Web on :3000, health API live, git committed |
 | 2. Database | DONE | PostgreSQL verified; full Prisma schema, 2 migrations, seed data and queries verified |
 | 3. Authentication and Security Foundation | DONE | Auth API, cookies, CSRF, CORS, rate limiting, lockout, audit logs and 5 integration tests verified |
-| 4. Course Catalog Backend | NOT STARTED | |
+| 4. Course Catalog Backend | DONE | Public category/catalog/recommendation APIs and admin content CRUD verified by integration tests |
 | 5. Flutter Core UI | NOT STARTED | |
 | 6. Flutter Course Catalog | NOT STARTED | |
 | 7. Cart | NOT STARTED | |
@@ -91,17 +91,17 @@
 - [x] auth automated tests
 
 ## 4. Course Catalog Backend
-- [ ] category API
-- [ ] course listing
-- [ ] search
-- [ ] filters
-- [ ] sorting
-- [ ] pagination
-- [ ] course detail
-- [ ] recommendations
-- [ ] admin course CRUD
-- [ ] admin category CRUD
-- [ ] API tests
+- [x] category API
+- [x] course listing
+- [x] search
+- [x] filters
+- [x] sorting
+- [x] pagination
+- [x] course detail
+- [x] recommendations
+- [x] admin course CRUD
+- [x] admin category CRUD
+- [x] API tests
 
 ## 5. Flutter Core UI
 - [ ] app theme
