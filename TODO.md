@@ -1,17 +1,17 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: 2. Database
-- Current task: None – Phase 1 complete, ready for Phase 2
-- Last completed task: Phase 1 – Project Setup (backend server running, Flutter Web running, health API verified)
-- Blocking issues: PostgreSQL not yet configured locally (needed for Phase 2 Prisma migrations)
-- Next recommended task: **Phase 2** – Define full Prisma schema with all enums and entities, run first migration
+- Current phase: 3. Authentication and Security Foundation
+- Current task: None – Phase 2 complete, ready for Phase 3
+- Last completed task: Phase 2 – Prisma PostgreSQL schema, migrations, Vietnamese seed and representative database queries verified
+- Blocking issues: None
+- Next recommended task: **Phase 3** – Implement authentication services and routes (register/login/logout/me), bcrypt verification, HttpOnly sessions, CSRF and login lockout
 
 ## Progress Summary
 | Phase | Status | Notes |
 | :--- | :--- | :--- |
 | 1. Project Setup | DONE | Backend on :4000, Flutter Web on :3000, health API live, git committed |
-| 2. Database | NOT STARTED | Needs PostgreSQL + Prisma schema |
+| 2. Database | DONE | PostgreSQL verified; full Prisma schema, 2 migrations, seed data and queries verified |
 | 3. Authentication and Security Foundation | NOT STARTED | |
 | 4. Course Catalog Backend | NOT STARTED | |
 | 5. Flutter Core UI | NOT STARTED | |
@@ -39,7 +39,7 @@
 - [x] repository structure (`/frontend`, `/backend`, `/docs`, `/testing`, `/database`)
 - [x] Flutter Web frontend setup (Flutter 3.38.4, go_router, Riverpod, Dio – `flutter pub get` ✓)
 - [x] Node.js + Express backend setup (Node 22, Express 4.x, Helmet, CORS, rate limiting)
-- [ ] PostgreSQL (service must be running locally; not verified yet)
+- [x] PostgreSQL (service running locally; migration and queries verified)
 - [x] Prisma (installed v6.12.0, schema.prisma initialized, prisma.js singleton created)
 - [x] environment configuration (`backend/.env` + `backend/.env.example`)
 - [x] health API (`GET /api/health` → 200 OK verified via PowerShell and browser)
@@ -47,31 +47,31 @@
 - [x] Git initialization/checkpoint (initial commit b6b4b6d, 34 files)
 
 ## 2. Database
-- [ ] Prisma schema
-- [ ] enums
-- [ ] User
-- [ ] Category
-- [ ] Course
-- [ ] Lesson
-- [ ] CourseFile
-- [ ] Cart
-- [ ] CartItem
-- [ ] Order
-- [ ] OrderItem
-- [ ] Payment
-- [ ] CourseEntitlement
-- [ ] CourseProgress
-- [ ] DownloadToken
-- [ ] Certificate
-- [ ] Review
-- [ ] Wishlist
-- [ ] Coupon
-- [ ] CouponUsage
-- [ ] AuditLog
-- [ ] migrations
-- [ ] seed data
-- [ ] database documentation
-- [ ] database verification
+- [x] Prisma schema
+- [x] enums
+- [x] User
+- [x] Category
+- [x] Course
+- [x] Lesson
+- [x] CourseFile
+- [x] Cart
+- [x] CartItem
+- [x] Order
+- [x] OrderItem
+- [x] Payment
+- [x] CourseEntitlement
+- [x] CourseProgress
+- [x] DownloadToken
+- [x] Certificate
+- [x] Review
+- [x] Wishlist
+- [x] Coupon
+- [x] CouponUsage
+- [x] AuditLog
+- [x] migrations
+- [x] seed data
+- [x] database documentation
+- [x] database verification
 
 ## 3. Authentication and Security Foundation
 - [ ] register
