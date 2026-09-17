@@ -1,18 +1,18 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: 3. Authentication and Security Foundation
-- Current task: None – Phase 2 complete, ready for Phase 3
-- Last completed task: Phase 2 – Prisma PostgreSQL schema, migrations, Vietnamese seed and representative database queries verified
+- Current phase: 4. Course Catalog Backend
+- Current task: None – Phase 3 complete, ready for Phase 4
+- Last completed task: Phase 3 – authentication and security foundation (auth API, CSRF, cookies, authorization, lockout and tests) verified
 - Blocking issues: None
-- Next recommended task: **Phase 3** – Implement authentication services and routes (register/login/logout/me), bcrypt verification, HttpOnly sessions, CSRF and login lockout
+- Next recommended task: **Phase 4** – Implement category and public course catalog APIs with search, filters, sorting and pagination
 
 ## Progress Summary
 | Phase | Status | Notes |
 | :--- | :--- | :--- |
 | 1. Project Setup | DONE | Backend on :4000, Flutter Web on :3000, health API live, git committed |
 | 2. Database | DONE | PostgreSQL verified; full Prisma schema, 2 migrations, seed data and queries verified |
-| 3. Authentication and Security Foundation | NOT STARTED | |
+| 3. Authentication and Security Foundation | DONE | Auth API, cookies, CSRF, CORS, rate limiting, lockout, audit logs and 5 integration tests verified |
 | 4. Course Catalog Backend | NOT STARTED | |
 | 5. Flutter Core UI | NOT STARTED | |
 | 6. Flutter Course Catalog | NOT STARTED | |
@@ -74,21 +74,21 @@
 - [x] database verification
 
 ## 3. Authentication and Security Foundation
-- [ ] register
-- [ ] login
-- [ ] logout
-- [ ] current user
-- [ ] bcrypt
-- [ ] HttpOnly cookies
-- [ ] SameSite
-- [ ] Secure cookie production config
-- [ ] CSRF
-- [ ] CORS
-- [ ] role authorization
-- [ ] login rate limiting
-- [ ] 5 failed login lockout
-- [ ] audit login
-- [ ] auth automated tests
+- [x] register
+- [x] login
+- [x] logout
+- [x] current user
+- [x] bcrypt
+- [x] HttpOnly cookies
+- [x] SameSite
+- [x] Secure cookie production config
+- [x] CSRF
+- [x] CORS
+- [x] role authorization
+- [x] login rate limiting
+- [x] 5 failed login lockout
+- [x] audit login
+- [x] auth automated tests
 
 ## 4. Course Catalog Backend
 - [ ] category API

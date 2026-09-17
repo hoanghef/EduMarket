@@ -11,7 +11,18 @@ dotenv.config();
 const app = express();
 
 // ── Security middleware ──────────────────────────────────────────────────────
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        frameAncestors: ["'none'"],
+        objectSrc: ["'none'"],
+      },
+    },
+  })
+);
 
 // CORS – Flutter Web will be served from a different origin in dev
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
@@ -42,7 +53,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const healthRouter = require('./routes/health');
+const authRouter = require('./routes/auth');
+const { csrfProtection } = require('./lib/auth');
 app.use('/api', healthRouter);
+app.use('/api', csrfProtection);
+app.use('/api/auth', authRouter);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

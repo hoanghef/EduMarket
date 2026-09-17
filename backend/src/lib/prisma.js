@@ -1,8 +1,8 @@
 'use strict';
 
-const { PrismaClient } = require('./generated/prisma');
+const { PrismaClient } = require('../generated/prisma');
 
-/** @type {import('./generated/prisma').PrismaClient} */
+/** @type {import('../generated/prisma').PrismaClient} */
 let prisma;
 
 if (process.env.NODE_ENV === 'production') {
