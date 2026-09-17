@@ -3,6 +3,7 @@
 const { Router } = require('express');
 const prisma = require('../lib/prisma');
 const { requireAdmin, requireAuth } = require('../middleware/auth');
+const { confirmCodOrder } = require('../services/order-service');
 
 const router = Router();
 const levels = new Set(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']);
@@ -76,5 +77,12 @@ router.delete('/lessons/:id', async (req, res, next) => { try { await prisma.les
 router.post('/courses/:courseId/files', async (req, res, next) => { try { const originalName = text(req.body.originalName, 255, true), storageKey = text(req.body.storageKey, 500, true), mimeType = text(req.body.mimeType, 150, true), sizeBytes = positiveInt(req.body.sizeBytes, true); if (!originalName || !storageKey || !mimeType || sizeBytes === null || !/^private\/[A-Za-z0-9/_-]+$/.test(storageKey)) return fail(res); if (req.body.lessonId && !await prisma.lesson.findFirst({ where: { id: req.body.lessonId, courseId: req.params.courseId } })) return fail(res); const file = await prisma.courseFile.create({ data: { courseId: req.params.courseId, lessonId: req.body.lessonId || null, originalName, storageKey, mimeType, sizeBytes } }); await audit(req, 'COURSE_FILE_CREATED', 'CourseFile', file.id); return res.status(201).json({ success: true, data: { file } }); } catch (e) { next(e); } });
 router.patch('/files/:id', async (req, res, next) => { try { const data = {}; for (const [key, max] of [['originalName', 255], ['storageKey', 500], ['mimeType', 150]]) if (req.body[key] !== undefined) { const value = text(req.body[key], max, true); if (!value || (key === 'storageKey' && !/^private\/[A-Za-z0-9/_-]+$/.test(value))) return fail(res); data[key] = value; } if (req.body.sizeBytes !== undefined) { const value = positiveInt(req.body.sizeBytes, true); if (value === null) return fail(res); data.sizeBytes = value; } const file = await prisma.courseFile.update({ where: { id: req.params.id }, data }); await audit(req, 'COURSE_FILE_UPDATED', 'CourseFile', file.id); return res.json({ success: true, data: { file } }); } catch (e) { next(e); } });
 router.delete('/files/:id', async (req, res, next) => { try { await prisma.courseFile.delete({ where: { id: req.params.id } }); await audit(req, 'COURSE_FILE_DELETED', 'CourseFile', req.params.id); return res.status(204).end(); } catch (e) { next(e); } });
+
+router.patch('/orders/:id/cod-confirm', async (req, res, next) => {
+  try {
+    const order = await confirmCodOrder(req.params.id, req.user.id, req);
+    return res.json({ success: true, data: { order } });
+  } catch (error) { return next(error); }
+});
 
 module.exports = router;

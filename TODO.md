@@ -1,6 +1,13 @@
 # EduMarket Project TODO
 
 ## Current Status
+- Current phase: Prompt 6 backend scope complete
+- Current task: None - cart, checkout, COD confirmation, and customer order APIs are implemented and verified; Flutter UI is deferred to Prompt 7
+- Last completed task: Prompt 6 - authenticated cart, COD checkout/orders, atomic entitlement grant, audit logs, and integration tests
+- Blocking issues: None
+- Next recommended task: **Prompt 7** - Implement Flutter cart, checkout, and order pages against the verified backend APIs
+
+## Previous Current Status
 - Current phase: 7. Cart
 - Current task: None – Phase 5 & 6 complete, ready for Phase 7
 - Last completed task: Phase 5 & 6 – responsive public catalog UI built and verified
@@ -16,11 +23,11 @@
 | 4. Course Catalog Backend | DONE | Public category/catalog/recommendation APIs and admin content CRUD verified by integration tests |
 | 5. Flutter Core UI | DONE | AppShell, responsive breakpoints, theming, navigation, and core states built |
 | 6. Flutter Course Catalog | DONE | Home, catalog, detail pages built with real API data and responsive layouts |
-| 7. Cart | NOT STARTED | |
+| 7. Cart | IN PROGRESS | Backend Cart API complete and verified; Flutter Cart page deferred to Prompt 7 |
 | 8. Coupons | NOT STARTED | |
-| 9. Checkout and Orders | NOT STARTED | |
+| 9. Checkout and Orders | IN PROGRESS | Backend COD checkout and customer order APIs complete and verified; Flutter pages and VNPay remain pending |
 | 10. VNPay Sandbox | NOT STARTED | |
-| 11. Digital Course Entitlement | NOT STARTED | |
+| 11. Digital Course Entitlement | IN PROGRESS | Atomic COD entitlement grant verified; library, revoke/restore, and protected APIs remain pending |
 | 12. Customer Library | NOT STARTED | |
 | 13. Secure Downloads | NOT STARTED | |
 | 14. Course Progress | NOT STARTED | |
@@ -134,13 +141,13 @@
 - [x] browser verification
 
 ## 7. Cart
-- [ ] backend cart API
-- [ ] add course
-- [ ] remove course
-- [ ] duplicate prevention
-- [ ] already-owned course prevention
+- [x] backend cart API
+- [x] add course
+- [x] remove course
+- [x] duplicate prevention
+- [x] already-owned course prevention
 - [ ] Flutter cart page
-- [ ] cart tests
+- [x] cart tests
 
 ## 8. Coupons
 - [ ] percentage coupon
@@ -154,17 +161,17 @@
 - [ ] tests
 
 ## 9. Checkout and Orders
-- [ ] checkout transaction
-- [ ] server-side price calculation
-- [ ] immutable order items
-- [ ] COD option
+- [x] checkout transaction
+- [x] server-side price calculation
+- [x] immutable order items
+- [x] COD option
 - [ ] VNPay option
-- [ ] order history
-- [ ] order detail
-- [ ] order status
+- [x] order history
+- [x] order detail
+- [x] order status
 - [ ] Flutter checkout
 - [ ] Flutter order pages
-- [ ] tests
+- [x] tests
 
 ## 10. VNPay Sandbox
 - [ ] create payment
@@ -185,10 +192,10 @@
 - [ ] grantCourseAccess
 - [ ] revokeCourseAccess
 - [ ] restoreCourseAccess
-- [ ] ACTIVE entitlement
+- [x] ACTIVE entitlement
 - [ ] REVOKED entitlement
 - [ ] protected course API
-- [ ] COD grant flow
+- [x] COD grant flow
 - [ ] VNPay grant flow
 - [ ] admin entitlement APIs
 - [ ] tests
