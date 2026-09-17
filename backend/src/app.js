@@ -41,7 +41,7 @@ app.use(
 // Global rate limiter (will be overridden on sensitive routes)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,
+  max: process.env.NODE_ENV === 'production' ? 500 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, code: 'RATE_LIMIT', message: 'Too many requests' },

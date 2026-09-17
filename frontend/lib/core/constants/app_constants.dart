@@ -15,6 +15,7 @@ class AppConstants {
   static const String routeHome = '/';
   static const String routeCourses = '/khoa-hoc';
   static const String routeCourseDetail = '/khoa-hoc/:slug';
+  static const String routeCategory = '/danh-muc/:slug';
   static const String routeLogin = '/login';
   static const String routeRegister = '/register';
   static const String routeCart = '/cart';

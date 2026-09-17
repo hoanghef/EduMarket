@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: 5. Flutter Core UI
-- Current task: None – Phase 4 complete, ready for Phase 5
-- Last completed task: Phase 4 – public catalog and protected admin content-management APIs verified
+- Current phase: 7. Cart
+- Current task: None – Phase 5 & 6 complete, ready for Phase 7
+- Last completed task: Phase 5 & 6 – responsive public catalog UI built and verified
 - Blocking issues: None
-- Next recommended task: **Phase 5** – Implement Flutter app shell, responsive layout, navigation, theme and shared UI states
+- Next recommended task: **Phase 7** – Implement backend Cart API and Flutter Cart page
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -14,8 +14,8 @@
 | 2. Database | DONE | PostgreSQL verified; full Prisma schema, 2 migrations, seed data and queries verified |
 | 3. Authentication and Security Foundation | DONE | Auth API, cookies, CSRF, CORS, rate limiting, lockout, audit logs and 5 integration tests verified |
 | 4. Course Catalog Backend | DONE | Public category/catalog/recommendation APIs and admin content CRUD verified by integration tests |
-| 5. Flutter Core UI | NOT STARTED | |
-| 6. Flutter Course Catalog | NOT STARTED | |
+| 5. Flutter Core UI | DONE | AppShell, responsive breakpoints, theming, navigation, and core states built |
+| 6. Flutter Course Catalog | DONE | Home, catalog, detail pages built with real API data and responsive layouts |
 | 7. Cart | NOT STARTED | |
 | 8. Coupons | NOT STARTED | |
 | 9. Checkout and Orders | NOT STARTED | |
@@ -104,34 +104,34 @@
 - [x] API tests
 
 ## 5. Flutter Core UI
-- [ ] app theme
-- [ ] responsive breakpoints
-- [ ] router
-- [ ] AppShell
-- [ ] navbar
-- [ ] footer
-- [ ] loading state
-- [ ] empty state
-- [ ] error state
-- [ ] desktop
-- [ ] tablet
-- [ ] mobile
+- [x] app theme
+- [x] responsive breakpoints
+- [x] router
+- [x] AppShell
+- [x] navbar
+- [x] footer
+- [x] loading state
+- [x] empty state
+- [x] error state
+- [x] desktop
+- [x] tablet
+- [x] mobile
 
 ## 6. Flutter Course Catalog
-- [ ] home page
-- [ ] featured categories
-- [ ] best sellers
-- [ ] new courses
-- [ ] top rated courses
-- [ ] course listing
-- [ ] filters
-- [ ] search
-- [ ] sort
-- [ ] pagination
-- [ ] course detail
-- [ ] recommendation section
-- [ ] real API integration
-- [ ] browser verification
+- [x] home page
+- [x] featured categories
+- [x] best sellers
+- [x] new courses
+- [x] top rated courses
+- [x] course listing
+- [x] filters
+- [x] search
+- [x] sort
+- [x] pagination
+- [x] course detail
+- [x] recommendation section
+- [x] real API integration
+- [x] browser verification
 
 ## 7. Cart
 - [ ] backend cart API

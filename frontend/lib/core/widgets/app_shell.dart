@@ -1,0 +1,459 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../theme/app_theme.dart';
+
+/// Breakpoints for responsive layout.
+abstract final class Breakpoint {
+  static const double mobile = 600;
+  static const double tablet = 1024;
+  static const double desktop = 1280;
+
+  static bool isMobile(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < mobile;
+
+  static bool isTablet(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return w >= mobile && w < tablet;
+  }
+
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= tablet;
+
+  /// Returns the number of grid columns appropriate for the viewport.
+  static int gridColumns(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    if (w >= desktop) return 4;
+    if (w >= tablet) return 3;
+    if (w >= mobile) return 2;
+    return 1;
+  }
+
+  /// Max content width.
+  static const double maxContentWidth = 1280;
+
+  /// Horizontal page padding.
+  static double pagePadding(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    if (w >= desktop) return 48;
+    if (w >= tablet) return 32;
+    return 16;
+  }
+}
+
+/// Wraps every page with the site navbar and footer.
+class AppShell extends StatelessWidget {
+  const AppShell({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.surface,
+      body: Column(
+        children: [
+          const _Navbar(),
+          Expanded(child: child),
+          const _Footer(),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Navbar ────────────────────────────────────────────────────────────────────
+
+class _Navbar extends StatefulWidget {
+  const _Navbar();
+
+  @override
+  State<_Navbar> createState() => _NavbarState();
+}
+
+class _NavbarState extends State<_Navbar> {
+  bool _menuOpen = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Breakpoint.isMobile(context);
+    return Material(
+      color: Colors.white,
+      elevation: 0,
+      child: Column(
+        children: [
+          Container(
+            height: 64,
+            padding: EdgeInsets.symmetric(
+                horizontal: Breakpoint.pagePadding(context)),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: AppTheme.divider)),
+            ),
+            child: Row(
+              children: [
+                // Logo
+                GestureDetector(
+                  onTap: () => context.go('/'),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.primary, Color(0xFF7C3AED)],
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.school_rounded,
+                            color: Colors.white, size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'EduMarket',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.onSurface,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Desktop: nav links + search + auth
+                if (!isMobile) ...[
+                  const SizedBox(width: 24),
+                  _NavLink(label: 'Trang chủ', path: '/'),
+                  _NavLink(label: 'Khóa học', path: '/khoa-hoc'),
+                  const Spacer(),
+                  const _NavSearchBar(),
+                  const SizedBox(width: 16),
+                  OutlinedButton(
+                    onPressed: () => context.go('/login'),
+                    child: const Text('Đăng nhập'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () => context.go('/register'),
+                    child: const Text('Đăng ký'),
+                  ),
+                ] else ...[
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(_menuOpen ? Icons.close : Icons.menu),
+                    onPressed: () => setState(() => _menuOpen = !_menuOpen),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Mobile dropdown menu
+          if (isMobile && _menuOpen)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  _MobileNavLink(label: 'Trang chủ', path: '/'),
+                  _MobileNavLink(label: 'Khóa học', path: '/khoa-hoc'),
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setState(() => _menuOpen = false);
+                            context.go('/login');
+                          },
+                          child: const Text('Đăng nhập'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            setState(() => _menuOpen = false);
+                            context.go('/register');
+                          },
+                          child: const Text('Đăng ký'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavLink extends StatefulWidget {
+  const _NavLink({required this.label, required this.path});
+  final String label;
+  final String path;
+
+  @override
+  State<_NavLink> createState() => _NavLinkState();
+}
+
+class _NavLinkState extends State<_NavLink> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    final isActive = location == widget.path ||
+        (widget.path != '/' && location.startsWith(widget.path));
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: () => context.go(widget.path),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isActive || _hovered ? FontWeight.w600 : FontWeight.w500,
+              color: isActive
+                  ? AppTheme.primary
+                  : (_hovered ? AppTheme.primary : AppTheme.onSurface),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileNavLink extends StatelessWidget {
+  const _MobileNavLink({required this.label, required this.path});
+  final String label;
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(label),
+      onTap: () => context.go(path),
+      dense: true,
+    );
+  }
+}
+
+class _NavSearchBar extends StatelessWidget {
+  const _NavSearchBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 240,
+      height: 38,
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Tìm khóa học...',
+          prefixIcon: const Icon(Icons.search, size: 18),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: AppTheme.divider),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: AppTheme.divider),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: AppTheme.primary),
+          ),
+          filled: true,
+          fillColor: AppTheme.surface,
+        ),
+        onSubmitted: (q) {
+          if (q.trim().isNotEmpty) {
+            context.go('/khoa-hoc?q=${Uri.encodeComponent(q.trim())}');
+          }
+        },
+      ),
+    );
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+class _Footer extends StatelessWidget {
+  const _Footer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppTheme.onSurface,
+      padding: EdgeInsets.symmetric(
+        horizontal: Breakpoint.pagePadding(context),
+        vertical: 32,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+          child: Breakpoint.isMobile(context)
+              ? _FooterMobile()
+              : _FooterDesktop(),
+        ),
+      ),
+    );
+  }
+}
+
+class _FooterDesktop extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Brand
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.primary, Color(0xFF7C3AED)],
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(Icons.school_rounded,
+                            color: Colors.white, size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'EduMarket',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Nền tảng học trực tuyến hàng đầu\ncho người học Việt Nam.',
+                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.6),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 32),
+            Expanded(
+              child: _FooterColumn(
+                title: 'Khám phá',
+                links: const [
+                  ('Tất cả khóa học', '/khoa-hoc'),
+                  ('Lập trình', '/danh-muc/lap-trinh'),
+                  ('Thiết kế', '/danh-muc/thiet-ke'),
+                ],
+              ),
+            ),
+            const SizedBox(width: 32),
+            Expanded(
+              child: _FooterColumn(
+                title: 'Tài khoản',
+                links: const [
+                  ('Đăng nhập', '/login'),
+                  ('Đăng ký', '/register'),
+                  ('Thư viện của tôi', '/library'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        const Divider(color: Color(0xFF334155)),
+        const SizedBox(height: 16),
+        const Text(
+          '© 2026 EduMarket – CSE703102 E-commerce Capstone Project',
+          style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+        ),
+      ],
+    );
+  }
+}
+
+class _FooterMobile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Text(
+          'EduMarket',
+          style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Nền tảng học trực tuyến hàng đầu\ncho người học Việt Nam.',
+          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.6),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        const Divider(color: Color(0xFF334155)),
+        const SizedBox(height: 12),
+        const Text(
+          '© 2026 EduMarket',
+          style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+        ),
+      ],
+    );
+  }
+}
+
+class _FooterColumn extends StatelessWidget {
+  const _FooterColumn({required this.title, required this.links});
+  final String title;
+  final List<(String, String)> links;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 12),
+        ...links.map((l) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () => context.go(l.$2),
+                child: Text(
+                  l.$1,
+                  style: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 13,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Color(0xFF94A3B8)),
+                ),
+              ),
+            )),
+      ],
+    );
+  }
+}
