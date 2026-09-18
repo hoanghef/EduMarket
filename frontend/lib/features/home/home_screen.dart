@@ -336,10 +336,7 @@ class _CourseSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncCourses = ref.watch(
-      FutureProvider.autoDispose<CoursePage>((r) =>
-          r.watch(catalogRepositoryProvider).getCourses(filter)),
-    );
+    final asyncCourses = ref.watch(coursesFamilyProvider(filter));
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: Breakpoint.pagePadding(context)),

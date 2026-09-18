@@ -2,6 +2,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_constants.dart';
 
+import 'package:flutter/foundation.dart';
+
+/// Global in-memory CSRF token shared across requests.
+String? _csrfToken;
+
+void setCsrfToken(String? token) {
+  _csrfToken = token;
+}
+
+String? getClientCsrfToken() => _csrfToken;
+
 /// Singleton Dio HTTP client configured for the EduMarket backend.
 ///
 /// - Sends cookies with every request (`withCredentials = true` for CORS).
@@ -24,11 +35,22 @@ Dio createDioClient() {
     ),
   );
 
+  if (kIsWeb) {
+    try {
+      (dio.httpClientAdapter as dynamic).withCredentials = true;
+    } catch (_) {}
+  }
+
   // ── Request interceptor ──────────────────────────────────────────────────
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
-        // CSRF token will be injected by auth provider after it is fetched.
+        options.extra['withCredentials'] = true;
+        if (['POST', 'PUT', 'PATCH', 'DELETE'].contains(options.method.toUpperCase())) {
+          if (_csrfToken != null && _csrfToken!.isNotEmpty) {
+            options.headers['X-CSRF-Token'] = _csrfToken;
+          }
+        }
         handler.next(options);
       },
       onError: (DioException e, handler) {

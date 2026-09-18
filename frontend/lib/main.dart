@@ -25,7 +25,7 @@ class EduMarketApp extends ConsumerWidget {
       title: 'EduMarket – Online Course Marketplace',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      routerConfig: appRouter,
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }

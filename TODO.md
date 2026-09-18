@@ -1,31 +1,24 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Prompt 6 backend scope complete
-- Current task: None - cart, checkout, COD confirmation, and customer order APIs are implemented and verified; Flutter UI is deferred to Prompt 7
-- Last completed task: Prompt 6 - authenticated cart, COD checkout/orders, atomic entitlement grant, audit logs, and integration tests
+- Current phase: Frontend Authentication prerequisite & Prompt 7 finalized
+- Current task: Frontend authentication UI, state integration, route guards, and end-to-end browser flow verified
+- Last completed task: Implemented real Flutter Login & Register pages, Riverpod auth provider, CSRF & cookie credentials handling, route guards for protected screens, authenticated navbar state, safe Decimal amount parsing for orders, and verified full end-to-end journey in browser.
 - Blocking issues: None
-- Next recommended task: **Prompt 7** - Implement Flutter cart, checkout, and order pages against the verified backend APIs
-
-## Previous Current Status
-- Current phase: 7. Cart
-- Current task: None – Phase 5 & 6 complete, ready for Phase 7
-- Last completed task: Phase 5 & 6 – responsive public catalog UI built and verified
-- Blocking issues: None
-- Next recommended task: **Phase 7** – Implement backend Cart API and Flutter Cart page
+- Next recommended task: **Prompt 8** - Implement coupons or VNPay payment integration
 
 ## Progress Summary
 | Phase | Status | Notes |
 | :--- | :--- | :--- |
 | 1. Project Setup | DONE | Backend on :4000, Flutter Web on :3000, health API live, git committed |
 | 2. Database | DONE | PostgreSQL verified; full Prisma schema, 2 migrations, seed data and queries verified |
-| 3. Authentication and Security Foundation | DONE | Auth API, cookies, CSRF, CORS, rate limiting, lockout, audit logs and 5 integration tests verified |
+| 3. Authentication and Security Foundation | DONE | Auth API, cookies, CSRF, CORS, lockout, Flutter Login/Register UI, Riverpod state & route guards verified |
 | 4. Course Catalog Backend | DONE | Public category/catalog/recommendation APIs and admin content CRUD verified by integration tests |
 | 5. Flutter Core UI | DONE | AppShell, responsive breakpoints, theming, navigation, and core states built |
 | 6. Flutter Course Catalog | DONE | Home, catalog, detail pages built with real API data and responsive layouts |
-| 7. Cart | IN PROGRESS | Backend Cart API complete and verified; Flutter Cart page deferred to Prompt 7 |
+| 7. Cart | DONE | Backend Cart API and Flutter Cart page complete; add to cart and cart sync verified |
 | 8. Coupons | NOT STARTED | |
-| 9. Checkout and Orders | IN PROGRESS | Backend COD checkout and customer order APIs complete and verified; Flutter pages and VNPay remain pending |
+| 9. Checkout and Orders | IN PROGRESS | COD checkout, customer order APIs/UI, order history & details verified; VNPay pending |
 | 10. VNPay Sandbox | NOT STARTED | |
 | 11. Digital Course Entitlement | IN PROGRESS | Atomic COD entitlement grant verified; library, revoke/restore, and protected APIs remain pending |
 | 12. Customer Library | NOT STARTED | |
@@ -96,6 +89,12 @@
 - [x] 5 failed login lockout
 - [x] audit login
 - [x] auth automated tests
+- [x] Flutter Login page
+- [x] Flutter Register page
+- [x] Flutter auth state integration (Riverpod, Dio credentials, CSRF)
+- [x] Flutter session restoration (GET /api/auth/me)
+- [x] Flutter route protection & redirection guards
+- [x] Flutter authenticated AppShell & Navbar
 
 ## 4. Course Catalog Backend
 - [x] category API
@@ -146,7 +145,7 @@
 - [x] remove course
 - [x] duplicate prevention
 - [x] already-owned course prevention
-- [ ] Flutter cart page
+- [x] Flutter cart page
 - [x] cart tests
 
 ## 8. Coupons
@@ -169,8 +168,8 @@
 - [x] order history
 - [x] order detail
 - [x] order status
-- [ ] Flutter checkout
-- [ ] Flutter order pages
+- [x] Flutter checkout
+- [x] Flutter order pages
 - [x] tests
 
 ## 10. VNPay Sandbox
@@ -333,9 +332,9 @@
 - [ ] Status
 - [ ] Evidence
 - [ ] automated backend tests
-- [ ] Flutter analyze
-- [ ] Flutter test
-- [ ] Flutter build web
+- [x] Flutter analyze
+- [x] Flutter test
+- [x] Flutter build web
 
 ## 22. Final Browser Verification
 Include customer end-to-end flow:

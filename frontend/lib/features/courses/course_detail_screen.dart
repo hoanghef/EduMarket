@@ -8,6 +8,7 @@ import '../../core/widgets/course_card.dart';
 import '../../core/widgets/star_rating.dart';
 import '../courses/models/catalog_models.dart';
 import '../courses/providers/catalog_provider.dart';
+import '../cart/providers/cart_provider.dart';
 
 /// `/khoa-hoc/:slug`
 class CourseDetailScreen extends ConsumerWidget {
@@ -377,7 +378,7 @@ class _LessonTile extends StatelessWidget {
 
 // ── Buy card ──────────────────────────────────────────────────────────────────
 
-class _BuyCard extends StatelessWidget {
+class _BuyCard extends ConsumerWidget {
   const _BuyCard({required this.course});
   final CourseModel course;
 
@@ -389,8 +390,34 @@ class _BuyCard extends StatelessWidget {
         );
   }
 
+  Future<void> _addToCart(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(cartProvider.notifier).addToCart(course.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Đã thêm khóa học vào giỏ hàng!'),
+            action: SnackBarAction(
+              label: 'Xem giỏ hàng',
+              onPressed: () => context.go('/cart'),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi thêm vào giỏ hàng: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 4,
       shadowColor: Colors.black.withValues(alpha: 0.1),
@@ -446,7 +473,7 @@ class _BuyCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () {},
+                onPressed: () => _addToCart(context, ref),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

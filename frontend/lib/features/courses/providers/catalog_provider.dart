@@ -147,6 +147,10 @@ final coursesProvider = FutureProvider.autoDispose<CoursePage>((ref) {
   return ref.watch(catalogRepositoryProvider).getCourses(filter);
 });
 
+final coursesFamilyProvider = FutureProvider.autoDispose.family<CoursePage, CatalogFilter>((ref, filter) {
+  return ref.watch(catalogRepositoryProvider).getCourses(filter);
+});
+
 final courseDetailProvider =
     FutureProvider.autoDispose.family<CourseModel, String>((ref, slug) {
   return ref.watch(catalogRepositoryProvider).getCourseBySlug(slug);

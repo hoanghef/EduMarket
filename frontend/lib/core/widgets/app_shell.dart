@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 /// Breakpoints for responsive layout.
 abstract final class Breakpoint {
@@ -63,19 +65,23 @@ class AppShell extends StatelessWidget {
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
-class _Navbar extends StatefulWidget {
+class _Navbar extends ConsumerStatefulWidget {
   const _Navbar();
 
   @override
-  State<_Navbar> createState() => _NavbarState();
+  ConsumerState<_Navbar> createState() => _NavbarState();
 }
 
-class _NavbarState extends State<_Navbar> {
+class _NavbarState extends ConsumerState<_Navbar> {
   bool _menuOpen = false;
 
   @override
   Widget build(BuildContext context) {
     final isMobile = Breakpoint.isMobile(context);
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final isLoggedIn = authState.isAuthenticated && user != null;
+
     return Material(
       color: Colors.white,
       elevation: 0,
@@ -123,23 +129,68 @@ class _NavbarState extends State<_Navbar> {
                   ),
                 ),
 
-                // Desktop: nav links + search + auth
+                // Desktop: nav links + search + cart + auth
                 if (!isMobile) ...[
                   const SizedBox(width: 24),
                   _NavLink(label: 'Trang chủ', path: '/'),
                   _NavLink(label: 'Khóa học', path: '/khoa-hoc'),
                   const Spacer(),
-                  const _NavSearchBar(),
-                  const SizedBox(width: 16),
-                  OutlinedButton(
-                    onPressed: () => context.go('/login'),
-                    child: const Text('Đăng nhập'),
+                  const Flexible(child: _NavSearchBar()),
+                  const SizedBox(width: 12),
+                  // Cart button
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, size: 22),
+                    tooltip: 'Giỏ hàng',
+                    onPressed: () => context.go('/cart'),
                   ),
                   const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: () => context.go('/register'),
-                    child: const Text('Đăng ký'),
-                  ),
+                  if (isLoggedIn) ...[
+                    TextButton.icon(
+                      onPressed: () => context.go('/account/orders'),
+                      icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                      label: const Text('Đơn hàng'),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.person_outline,
+                              size: 16, color: AppTheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            user.fullName,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () => ref.read(authProvider.notifier).logout(),
+                      child: const Text('Đăng xuất'),
+                    ),
+                  ] else ...[
+                    OutlinedButton(
+                      onPressed: () => context.go('/login'),
+                      child: const Text('Đăng nhập'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () => context.go('/register'),
+                      child: const Text('Đăng ký'),
+                    ),
+                  ],
                 ] else ...[
                   const Spacer(),
                   IconButton(
@@ -160,31 +211,59 @@ class _NavbarState extends State<_Navbar> {
                 children: [
                   _MobileNavLink(label: 'Trang chủ', path: '/'),
                   _MobileNavLink(label: 'Khóa học', path: '/khoa-hoc'),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() => _menuOpen = false);
-                            context.go('/login');
-                          },
-                          child: const Text('Đăng nhập'),
-                        ),
+                  _MobileNavLink(label: 'Giỏ hàng', path: '/cart'),
+                  if (isLoggedIn) ...[
+                    _MobileNavLink(
+                        label: 'Đơn hàng của tôi', path: '/account/orders'),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.account_circle,
+                          color: AppTheme.primary),
+                      title: Text(user.fullName,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle:
+                          Text(user.email, style: const TextStyle(fontSize: 12)),
+                      dense: true,
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          setState(() => _menuOpen = false);
+                          ref.read(authProvider.notifier).logout();
+                        },
+                        child: const Text('Đăng xuất'),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            setState(() => _menuOpen = false);
-                            context.go('/register');
-                          },
-                          child: const Text('Đăng ký'),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() => _menuOpen = false);
+                              context.go('/login');
+                            },
+                            child: const Text('Đăng nhập'),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              setState(() => _menuOpen = false);
+                              context.go('/register');
+                            },
+                            child: const Text('Đăng ký'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -208,7 +287,10 @@ class _NavLinkState extends State<_NavLink> {
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
+    String location = '';
+    try {
+      location = GoRouterState.of(context).matchedLocation;
+    } catch (_) {}
     final isActive = location == widget.path ||
         (widget.path != '/' && location.startsWith(widget.path));
     return MouseRegion(
@@ -254,8 +336,8 @@ class _NavSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 240,
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 240),
       height: 38,
       child: TextField(
         decoration: InputDecoration(

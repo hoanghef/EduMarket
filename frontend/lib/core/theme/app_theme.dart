@@ -27,8 +27,6 @@ abstract final class AppTheme {
   static const Color cardBackground = Colors.white;
 
   // ── Typography ────────────────────────────────────────────────────────────
-  // TODO(phase-5-ui): Replace with 'Inter' once Inter TTF assets are added to
-  // assets/fonts/ or the google_fonts package is integrated.
   static const String _fontFamily = 'Roboto';
 
   static TextTheme get _textTheme => const TextTheme(
