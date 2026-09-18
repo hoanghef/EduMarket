@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Frontend Authentication prerequisite & Prompt 7 finalized
-- Current task: Frontend authentication UI, state integration, route guards, and end-to-end browser flow verified
-- Last completed task: Implemented real Flutter Login & Register pages, Riverpod auth provider, CSRF & cookie credentials handling, route guards for protected screens, authenticated navbar state, safe Decimal amount parsing for orders, and verified full end-to-end journey in browser.
-- Blocking issues: None
-- Next recommended task: **Prompt 8** - Implement coupons or VNPay payment integration
+- Current phase: Library and entitlement backend scope complete
+- Current task: ACTIVE entitlement enforcement, customer library APIs, lesson completion, and admin grant/revoke controls are implemented and verified
+- Last completed task: Implemented protected library APIs, idempotent lesson completion, admin entitlement grant/revoke with reasons and audit logs, and paid/unentitled/revoked integration tests.
+- Blocking issues: Live VNPay Sandbox execution still requires externally supplied Sandbox credentials and a public HTTPS return/IPN callback URL; signed-fixture integration tests are passing.
+- Next recommended task: Implement the next authorized prompt; Flutter library UI and secure download-token delivery remain incomplete.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -18,10 +18,10 @@
 | 6. Flutter Course Catalog | DONE | Home, catalog, detail pages built with real API data and responsive layouts |
 | 7. Cart | DONE | Backend Cart API and Flutter Cart page complete; add to cart and cart sync verified |
 | 8. Coupons | NOT STARTED | |
-| 9. Checkout and Orders | IN PROGRESS | COD checkout, customer order APIs/UI, order history & details verified; VNPay pending |
-| 10. VNPay Sandbox | NOT STARTED | |
-| 11. Digital Course Entitlement | IN PROGRESS | Atomic COD entitlement grant verified; library, revoke/restore, and protected APIs remain pending |
-| 12. Customer Library | NOT STARTED | |
+| 9. Checkout and Orders | IN PROGRESS | COD checkout and customer order APIs/UI verified; VNPay backend is verified while Flutter payment UI remains pending |
+| 10. VNPay Sandbox | DONE | Signed Sandbox create, return, IPN, amount/reference/signature checks, idempotency, audit logs, docs, and tests verified |
+| 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
+| 12. Customer Library | IN PROGRESS | Backend list, protected course/lesson/file metadata access and idempotent lesson completion verified; Flutter UI remains pending |
 | 13. Secure Downloads | NOT STARTED | |
 | 14. Course Progress | NOT STARTED | |
 | 15. Certificates | NOT STARTED | |
@@ -173,39 +173,39 @@
 - [x] tests
 
 ## 10. VNPay Sandbox
-- [ ] create payment
-- [ ] return URL
-- [ ] IPN
-- [ ] signature verification
-- [ ] amount verification
-- [ ] idempotency
-- [ ] payment update
-- [ ] order update
-- [ ] audit logs
-- [ ] duplicate callback prevention
-- [ ] Sandbox documentation
-- [ ] integration tests
+- [x] create payment
+- [x] return URL
+- [x] IPN
+- [x] signature verification
+- [x] amount verification
+- [x] idempotency
+- [x] payment update
+- [x] order update
+- [x] audit logs
+- [x] duplicate callback prevention
+- [x] Sandbox documentation
+- [x] integration tests
 
 ## 11. Digital Course Entitlement
-- [ ] grantOrderEntitlements
-- [ ] grantCourseAccess
-- [ ] revokeCourseAccess
-- [ ] restoreCourseAccess
+- [x] grantOrderEntitlements
+- [x] grantCourseAccess
+- [x] revokeCourseAccess
+- [x] restoreCourseAccess
 - [x] ACTIVE entitlement
-- [ ] REVOKED entitlement
-- [ ] protected course API
+- [x] REVOKED entitlement
+- [x] protected course API
 - [x] COD grant flow
-- [ ] VNPay grant flow
-- [ ] admin entitlement APIs
-- [ ] tests
+- [x] VNPay grant flow
+- [x] admin entitlement APIs
+- [x] tests
 
 ## 12. Customer Library
-- [ ] library API
-- [ ] purchased course list
-- [ ] protected course detail
+- [x] library API
+- [x] purchased course list
+- [x] protected course detail
 - [ ] Flutter library page
 - [ ] continue learning
-- [ ] revoked access state
+- [x] revoked access state
 - [ ] browser tests
 
 ## 13. Secure Downloads
@@ -222,12 +222,12 @@
 - [ ] tests
 
 ## 14. Course Progress
-- [ ] lesson completion
-- [ ] idempotent completion
+- [x] lesson completion
+- [x] idempotent completion
 - [ ] progress calculation
 - [ ] progress API
 - [ ] Flutter progress UI
-- [ ] tests
+- [x] tests
 
 ## 15. Certificates
 - [ ] unique certificate code
