@@ -4,6 +4,7 @@ const { Router } = require('express');
 const prisma = require('../lib/prisma');
 const { requireAdmin, requireAuth } = require('../middleware/auth');
 const { confirmCodOrder } = require('../services/order-service');
+const { grantEntitlement, revokeEntitlement } = require('../services/entitlement-service');
 
 const router = Router();
 const levels = new Set(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']);
@@ -82,6 +83,22 @@ router.patch('/orders/:id/cod-confirm', async (req, res, next) => {
   try {
     const order = await confirmCodOrder(req.params.id, req.user.id, req);
     return res.json({ success: true, data: { order } });
+  } catch (error) { return next(error); }
+});
+
+router.post('/entitlements/grant', async (req, res, next) => {
+  try {
+    const { userId, courseId, orderId } = req.body || {};
+    if (![userId, courseId, orderId].every((value) => typeof value === 'string' && value.trim())) return fail(res);
+    const entitlement = await grantEntitlement({ userId, courseId, orderId, adminId: req.user.id, req });
+    return res.status(201).json({ success: true, data: { entitlement } });
+  } catch (error) { return next(error); }
+});
+
+router.patch('/entitlements/:id/revoke', async (req, res, next) => {
+  try {
+    const entitlement = await revokeEntitlement({ entitlementId: req.params.id, reason: req.body?.reason, adminId: req.user.id, req });
+    return res.json({ success: true, data: { entitlement } });
   } catch (error) { return next(error); }
 });
 
