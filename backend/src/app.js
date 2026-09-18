@@ -58,6 +58,7 @@ const catalogRouter = require('./routes/catalog');
 const cartRouter = require('./routes/cart');
 const checkoutRouter = require('./routes/checkout');
 const ordersRouter = require('./routes/orders');
+const paymentsRouter = require('./routes/payments');
 const adminRouter = require('./routes/admin');
 const { csrfProtection } = require('./lib/auth');
 app.use('/api', healthRouter);
@@ -67,6 +68,7 @@ app.use('/api', catalogRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
