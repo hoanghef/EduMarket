@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const app = require('./app');
 const prisma = require('./lib/prisma');
+const { removeStoredFile } = require('./services/file-storage-service');
 
 let server; let baseUrl; let courseId; let lessonId; let fileId;
 let paidOrderId; let revokedOrderId; let paidEntitlementId; let revokedEntitlementId;
@@ -39,6 +40,9 @@ test.before(async () => {
 
 test.after(async () => {
   await prisma.courseProgress.deleteMany({ where: { courseId } });
+  const certificates = await prisma.certificate.findMany({ where: { courseId }, select: { pdfStorageKey: true } });
+  await prisma.certificate.deleteMany({ where: { courseId } });
+  for (const certificate of certificates) if (certificate.pdfStorageKey) removeStoredFile(certificate.pdfStorageKey);
   await prisma.courseEntitlement.deleteMany({ where: { courseId } });
   for (const orderId of [paidOrderId, revokedOrderId].filter(Boolean)) { await prisma.auditLog.deleteMany({ where: { entityId: orderId } }); await prisma.order.delete({ where: { id: orderId } }); }
   if (courseId) await prisma.course.delete({ where: { id: courseId } });

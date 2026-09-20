@@ -61,6 +61,7 @@ const ordersRouter = require('./routes/orders');
 const paymentsRouter = require('./routes/payments');
 const libraryRouter = require('./routes/library');
 const { downloadRouter, filesRouter } = require('./routes/downloads');
+const certificatesRouter = require('./routes/certificates');
 const adminRouter = require('./routes/admin');
 const { csrfProtection } = require('./lib/auth');
 app.use('/api', healthRouter);
@@ -74,6 +75,7 @@ app.use('/api/payments', paymentsRouter);
 app.use('/api/library', libraryRouter);
 app.use('/api/files', filesRouter);
 app.use('/api/download', downloadRouter);
+app.use('/api/certificates', certificatesRouter);
 app.use('/api/admin', adminRouter);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────

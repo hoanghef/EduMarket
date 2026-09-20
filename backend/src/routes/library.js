@@ -1,11 +1,10 @@
 'use strict';
 
 const { Router } = require('express');
-const { Prisma } = require('../generated/prisma');
 const prisma = require('../lib/prisma');
 const { requireAuth, requireCustomer } = require('../middleware/auth');
-const { BusinessError, clientIp } = require('../services/order-service');
 const { requireActiveEntitlement } = require('../services/entitlement-service');
+const { completeLessonAndCalculateProgress } = require('../services/progress-service');
 
 const router = Router();
 router.use(requireAuth, requireCustomer);
@@ -43,16 +42,7 @@ router.get('/lessons/:lessonId', async (req, res, next) => {
 
 router.post('/lessons/:lessonId/complete', async (req, res, next) => {
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      const lesson = await tx.lesson.findUnique({ where: { id: req.params.lessonId }, select: { id: true, courseId: true } });
-      if (!lesson) throw new BusinessError(404, 'LESSON_NOT_FOUND', 'Lesson not found.');
-      await requireActiveEntitlement(req.user.id, lesson.courseId, tx);
-      const existing = await tx.courseProgress.findUnique({ where: { userId_lessonId: { userId: req.user.id, lessonId: lesson.id } } });
-      if (existing) return { progress: existing, created: false };
-      const progress = await tx.courseProgress.create({ data: { userId: req.user.id, courseId: lesson.courseId, lessonId: lesson.id } });
-      await tx.auditLog.create({ data: { userId: req.user.id, action: 'LESSON_COMPLETED', entityType: 'CourseProgress', entityId: progress.id, ipAddress: clientIp(req), metadata: { courseId: lesson.courseId, lessonId: lesson.id } } });
-      return { progress, created: true };
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    const result = await completeLessonAndCalculateProgress({ userId: req.user.id, lessonId: req.params.lessonId, req });
     return res.status(result.created ? 201 : 200).json({ success: true, data: result });
   } catch (error) {
     if (error.code === 'P2002') return res.status(200).json({ success: true, data: { created: false } });

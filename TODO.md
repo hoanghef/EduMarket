@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Secure Downloads backend implemented and verified
-- Current task: Private admin upload and entitlement-protected temporary download delivery implemented
-- Last completed task: Private allowlisted admin upload; one-use, SHA-256-hashed 10-minute download tokens; entitlement checks at issue and download time; safe file streaming; audit logs; download integration tests. Prisma validation and migration status pass; backend test suite: 17/17 PASS; health API: HTTP 200.
-- Blocking issues: Browser manual verification pending (browser automation unavailable).
-- Next recommended task: Manually verify the existing Library UI and secure-download flow in a browser, then begin only the next authorized implementation prompt.
+- Current phase: Prompt 12 certificate backend complete and verified
+- Current task: Customer certificate listing and owner-protected private PDF delivery implemented
+- Last completed task: Authenticated customers list only their own safe certificate metadata and can stream only their own private certificate PDF; IDOR attempts return 404. Public verification remains minimal and read-only. Backend test suite: 18/18 PASS; Prisma validation/migration status pass; health API: HTTP 200.
+- Blocking issues: No backend blocker for this scope. Browser manual verification remains pending (browser automation unavailable).
+- Next recommended task: After authorization, begin Prompt 13 Flutter certificate UI only; do not alter the completed certificate backend without a new requirement.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -23,8 +23,8 @@
 | 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
 | 12. Customer Library | DONE (pending browser test) | Backend list, protected course/lesson/file metadata access, idempotent lesson completion; Flutter LibraryScreen, CourseLearningScreen, LessonPlayerScreen, progress bar, revoked-access denial implemented & statically verified |
 | 13. Secure Downloads | DONE | Private admin upload, entitlement-protected hashed temporary tokens, single-use streaming, audit logs, and integration tests verified |
-| 14. Course Progress | NOT STARTED | |
-| 15. Certificates | NOT STARTED | |
+| 14. Course Progress | IN PROGRESS | Required-lesson calculation is returned by lesson completion and verified; standalone progress API and Flutter UI remain |
+| 15. Certificates | IN PROGRESS | Prompt 12 backend is complete: unique automatic issuance, private PDF generation, public verification, owner-only list/download, duplicate prevention, and tests verified; Flutter UI remains Prompt 13 |
 | 16. Wishlist | NOT STARTED | |
 | 17. Reviews | NOT STARTED | |
 | 18. Admin Panel | NOT STARTED | |
@@ -224,21 +224,21 @@
 ## 14. Course Progress
 - [x] lesson completion
 - [x] idempotent completion
-- [ ] progress calculation
+- [x] progress calculation
 - [ ] progress API
 - [ ] Flutter progress UI
 - [x] tests
 
 ## 15. Certificates
-- [ ] unique certificate code
-- [ ] automatic certificate creation
-- [ ] PDF generation
-- [ ] public verification
-- [ ] certificate list
-- [ ] certificate download
+- [x] unique certificate code
+- [x] automatic certificate creation
+- [x] PDF generation
+- [x] public verification
+- [x] certificate list
+- [x] certificate download
 - [ ] Flutter certificate page
-- [ ] duplicate prevention
-- [ ] tests
+- [x] duplicate prevention
+- [x] tests
 
 ## 16. Wishlist
 - [ ] add wishlist
