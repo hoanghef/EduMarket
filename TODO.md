@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Customer Library UI implemented
-- Current task: Flutter Library screen, Course Learning screen, and Lesson Player screen implemented and statically verified
-- Last completed task: Library screen (entitlement list, empty/error states), CourseLearningScreen (lesson list, progress bar, mark-complete, revoked-access denial, file attachments), LessonPlayerScreen (breadcrumb, content, mark-complete, prev/next navigation). flutter analyze: 0 issues. flutter test: 9/9 PASS. flutter build web: √ success. Backend library integration: 15/15 pass.
+- Current phase: Secure Downloads backend implemented and verified
+- Current task: Private admin upload and entitlement-protected temporary download delivery implemented
+- Last completed task: Private allowlisted admin upload; one-use, SHA-256-hashed 10-minute download tokens; entitlement checks at issue and download time; safe file streaming; audit logs; download integration tests. Prisma validation and migration status pass; backend test suite: 17/17 PASS; health API: HTTP 200.
 - Blocking issues: Browser manual verification pending (browser automation unavailable).
-- Next recommended task: Manual browser test of Library UI flow, then proceed to Prompt 11 (Secure Downloads).
+- Next recommended task: Manually verify the existing Library UI and secure-download flow in a browser, then begin only the next authorized implementation prompt.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -22,7 +22,7 @@
 | 10. VNPay Sandbox | DONE | Signed Sandbox create, return, IPN, amount/reference/signature checks, idempotency, audit logs, docs, and tests verified |
 | 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
 | 12. Customer Library | DONE (pending browser test) | Backend list, protected course/lesson/file metadata access, idempotent lesson completion; Flutter LibraryScreen, CourseLearningScreen, LessonPlayerScreen, progress bar, revoked-access denial implemented & statically verified |
-| 13. Secure Downloads | NOT STARTED | |
+| 13. Secure Downloads | DONE | Private admin upload, entitlement-protected hashed temporary tokens, single-use streaming, audit logs, and integration tests verified |
 | 14. Course Progress | NOT STARTED | |
 | 15. Certificates | NOT STARTED | |
 | 16. Wishlist | NOT STARTED | |
@@ -209,17 +209,17 @@
 - [ ] browser tests
 
 ## 13. Secure Downloads
-- [ ] private storage
-- [ ] generate secure random token
-- [ ] hash token
-- [ ] 10 minute expiry
-- [ ] max download count
-- [ ] temporary download URL
-- [ ] file streaming
-- [ ] expired token handling
-- [ ] revoked entitlement handling
-- [ ] audit log
-- [ ] tests
+- [x] private storage
+- [x] generate secure random token
+- [x] hash token
+- [x] 10 minute expiry
+- [x] max download count
+- [x] temporary download URL
+- [x] file streaming
+- [x] expired token handling
+- [x] revoked entitlement handling
+- [x] audit log
+- [x] tests
 
 ## 14. Course Progress
 - [x] lesson completion
