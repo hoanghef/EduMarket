@@ -146,6 +146,12 @@ class _NavbarState extends ConsumerState<_Navbar> {
                   const SizedBox(width: 8),
                   if (isLoggedIn) ...[
                     TextButton.icon(
+                      onPressed: () => context.go('/library'),
+                      icon: const Icon(Icons.library_books_outlined, size: 18),
+                      label: const Text('Thư viện'),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
                       onPressed: () => context.go('/account/orders'),
                       icon: const Icon(Icons.receipt_long_outlined, size: 18),
                       label: const Text('Đơn hàng'),
@@ -213,6 +219,8 @@ class _NavbarState extends ConsumerState<_Navbar> {
                   _MobileNavLink(label: 'Khóa học', path: '/khoa-hoc'),
                   _MobileNavLink(label: 'Giỏ hàng', path: '/cart'),
                   if (isLoggedIn) ...[
+                    _MobileNavLink(
+                        label: 'Thư viện của tôi', path: '/library'),
                     _MobileNavLink(
                         label: 'Đơn hàng của tôi', path: '/account/orders'),
                     const SizedBox(height: 8),

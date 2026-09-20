@@ -328,7 +328,11 @@ void main() {
     );
     final container = createContainer(loggedInUser: user);
     addTearDown(container.dispose);
-    setupDesktopViewport(tester);
+    // Use a wider viewport to accommodate Library + Orders + Logout buttons
+    tester.view.physicalSize = const Size(1440, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -341,6 +345,7 @@ void main() {
     await pumpUntilResolved(tester);
 
     expect(find.text('Vũ Hoàng'), findsWidgets);
+    expect(find.text('Thư viện'), findsWidgets);
     expect(find.text('Đơn hàng'), findsWidgets);
     expect(find.text('Đăng xuất'), findsWidgets);
   });

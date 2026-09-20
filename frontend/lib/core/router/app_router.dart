@@ -12,6 +12,9 @@ import '../../features/cart/cart_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/orders/order_history_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
+import '../../features/library/library_screen.dart';
+import '../../features/library/course_learning_screen.dart';
+import '../../features/library/lesson_player_screen.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 
@@ -31,7 +34,8 @@ class RouterNotifier extends ChangeNotifier {
 
     final isProtected = location.startsWith('/cart') ||
         location.startsWith('/checkout') ||
-        location.startsWith('/account');
+        location.startsWith('/account') ||
+        location.startsWith('/library');
 
     final isAuthRoute = location == '/login' || location == '/register';
 
@@ -123,7 +127,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/library',
         name: 'library',
-        builder: (context, _) => const _ComingSoon(title: 'Thư viện của tôi'),
+        builder: (context, _) => const LibraryScreen(),
+      ),
+      GoRoute(
+        path: '/library/courses/:courseId',
+        name: 'courseLearning',
+        builder: (context, state) =>
+            CourseLearningScreen(courseId: state.pathParameters['courseId']!),
+      ),
+      GoRoute(
+        path: '/library/courses/:courseId/lessons/:lessonId',
+        name: 'lessonPlayer',
+        builder: (context, state) => LessonPlayerScreen(
+          courseId: state.pathParameters['courseId']!,
+          lessonId: state.pathParameters['lessonId']!,
+        ),
       ),
       GoRoute(
         path: '/cart',
@@ -187,6 +205,7 @@ final appRouter = GoRouter(
 );
 
 /// Placeholder screen for routes not yet implemented.
+// ignore: unused_element
 class _ComingSoon extends StatelessWidget {
   const _ComingSoon({required this.title});
   final String title;

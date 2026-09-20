@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Library and entitlement backend scope complete
-- Current task: ACTIVE entitlement enforcement, customer library APIs, lesson completion, and admin grant/revoke controls are implemented and verified
-- Last completed task: Implemented protected library APIs, idempotent lesson completion, admin entitlement grant/revoke with reasons and audit logs, and paid/unentitled/revoked integration tests.
-- Blocking issues: Live VNPay Sandbox execution still requires externally supplied Sandbox credentials and a public HTTPS return/IPN callback URL; signed-fixture integration tests are passing.
-- Next recommended task: Implement the next authorized prompt; Flutter library UI and secure download-token delivery remain incomplete.
+- Current phase: Customer Library UI implemented
+- Current task: Flutter Library screen, Course Learning screen, and Lesson Player screen implemented and statically verified
+- Last completed task: Library screen (entitlement list, empty/error states), CourseLearningScreen (lesson list, progress bar, mark-complete, revoked-access denial, file attachments), LessonPlayerScreen (breadcrumb, content, mark-complete, prev/next navigation). flutter analyze: 0 issues. flutter test: 9/9 PASS. flutter build web: √ success. Backend library integration: 15/15 pass.
+- Blocking issues: Browser manual verification pending (browser automation unavailable).
+- Next recommended task: Manual browser test of Library UI flow, then proceed to Prompt 11 (Secure Downloads).
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -21,7 +21,7 @@
 | 9. Checkout and Orders | IN PROGRESS | COD checkout and customer order APIs/UI verified; VNPay backend is verified while Flutter payment UI remains pending |
 | 10. VNPay Sandbox | DONE | Signed Sandbox create, return, IPN, amount/reference/signature checks, idempotency, audit logs, docs, and tests verified |
 | 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
-| 12. Customer Library | IN PROGRESS | Backend list, protected course/lesson/file metadata access and idempotent lesson completion verified; Flutter UI remains pending |
+| 12. Customer Library | DONE (pending browser test) | Backend list, protected course/lesson/file metadata access, idempotent lesson completion; Flutter LibraryScreen, CourseLearningScreen, LessonPlayerScreen, progress bar, revoked-access denial implemented & statically verified |
 | 13. Secure Downloads | NOT STARTED | |
 | 14. Course Progress | NOT STARTED | |
 | 15. Certificates | NOT STARTED | |
@@ -203,8 +203,8 @@
 - [x] library API
 - [x] purchased course list
 - [x] protected course detail
-- [ ] Flutter library page
-- [ ] continue learning
+- [x] Flutter library page
+- [x] continue learning
 - [x] revoked access state
 - [ ] browser tests
 
