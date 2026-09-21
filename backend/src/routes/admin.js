@@ -6,6 +6,7 @@ const { requireAdmin, requireAuth } = require('../middleware/auth');
 const { confirmCodOrder } = require('../services/order-service');
 const { grantEntitlement, revokeEntitlement } = require('../services/entitlement-service');
 const { removeStoredFile, uploadSingleFile } = require('../services/file-storage-service');
+const { moderateReview } = require('../services/review-service');
 
 const router = Router();
 const levels = new Set(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']);
@@ -100,6 +101,13 @@ router.patch('/entitlements/:id/revoke', async (req, res, next) => {
   try {
     const entitlement = await revokeEntitlement({ entitlementId: req.params.id, reason: req.body?.reason, adminId: req.user.id, req });
     return res.json({ success: true, data: { entitlement } });
+  } catch (error) { return next(error); }
+});
+
+router.patch('/reviews/:id/moderate', async (req, res, next) => {
+  try {
+    const review = await moderateReview({ reviewId: req.params.id, status: req.body?.status, adminId: req.user.id, req });
+    return res.json({ success: true, data: { review } });
   } catch (error) { return next(error); }
 });
 

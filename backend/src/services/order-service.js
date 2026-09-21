@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const { Prisma } = require('../generated/prisma');
 const prisma = require('../lib/prisma');
+const { lockAndValidateCouponForCheckout } = require('./coupon-service');
 
 class BusinessError extends Error {
   constructor(status, code, message) {
@@ -29,7 +30,7 @@ const orderInclude = {
   payment: { select: { id: true, method: true, status: true, amount: true, paidAt: true, transactionId: true } },
 };
 
-async function createCheckout(userId, method, req) {
+async function createCheckout(userId, method, req, requestedCouponCode) {
   const orderStatus = method === 'COD' ? 'WAITING_CONFIRMATION' : 'PENDING_PAYMENT';
   return prisma.$transaction(async (tx) => {
     const cart = await tx.cart.findUnique({
@@ -44,17 +45,27 @@ async function createCheckout(userId, method, req) {
     if (ownedCount) throw new BusinessError(409, 'COURSE_ALREADY_OWNED', 'One or more courses are already owned.');
 
     const subtotal = cart.items.reduce((total, item) => total.plus(effectivePrice(item.course)), new Prisma.Decimal(0));
+    const couponResult = requestedCouponCode === undefined || requestedCouponCode === null || requestedCouponCode === ''
+      ? null
+      : await lockAndValidateCouponForCheckout({ userId, code: requestedCouponCode, subtotal, tx });
+    const discountAmount = couponResult?.discountAmount || new Prisma.Decimal(0);
+    const totalAmount = subtotal.minus(discountAmount);
     const order = await tx.order.create({
       data: {
         orderNumber: orderNumber(), userId, status: orderStatus, subtotal,
-        discountAmount: new Prisma.Decimal(0), totalAmount: subtotal,
+        couponId: couponResult?.coupon.id, couponCodeSnapshot: couponResult?.coupon.code,
+        discountAmount, totalAmount,
         items: { create: cart.items.map((item) => ({ courseId: item.course.id, courseTitleSnapshot: item.course.title, courseSlugSnapshot: item.course.slug, unitPrice: item.course.price, discountedUnitPrice: effectivePrice(item.course) })) },
-        payment: { create: { method, status: 'PENDING', amount: subtotal } },
+        payment: { create: { method, status: 'PENDING', amount: totalAmount } },
       },
       include: orderInclude,
     });
+    if (couponResult) {
+      await tx.coupon.update({ where: { id: couponResult.coupon.id }, data: { usageCount: { increment: 1 } } });
+      await tx.couponUsage.create({ data: { couponId: couponResult.coupon.id, userId, orderId: order.id } });
+    }
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-    await tx.auditLog.create({ data: { userId, action: 'ORDER_CREATED', entityType: 'Order', entityId: order.id, ipAddress: clientIp(req), metadata: { method, totalAmount: subtotal.toFixed(2), itemCount: cart.items.length } } });
+    await tx.auditLog.create({ data: { userId, action: 'ORDER_CREATED', entityType: 'Order', entityId: order.id, ipAddress: clientIp(req), metadata: { method, totalAmount: totalAmount.toFixed(2), itemCount: cart.items.length, couponCode: couponResult?.coupon.code || null, discountAmount: discountAmount.toFixed(2) } } });
     return order;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }

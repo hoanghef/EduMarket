@@ -62,6 +62,9 @@ const paymentsRouter = require('./routes/payments');
 const libraryRouter = require('./routes/library');
 const { downloadRouter, filesRouter } = require('./routes/downloads');
 const certificatesRouter = require('./routes/certificates');
+const wishlistRouter = require('./routes/wishlist');
+const reviewsRouter = require('./routes/reviews');
+const couponsRouter = require('./routes/coupons');
 const adminRouter = require('./routes/admin');
 const { csrfProtection } = require('./lib/auth');
 app.use('/api', healthRouter);
@@ -76,6 +79,9 @@ app.use('/api/library', libraryRouter);
 app.use('/api/files', filesRouter);
 app.use('/api/download', downloadRouter);
 app.use('/api/certificates', certificatesRouter);
+app.use('/api/wishlist', wishlistRouter);
+app.use('/api', reviewsRouter);
+app.use('/api/coupons', couponsRouter);
 app.use('/api/admin', adminRouter);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────

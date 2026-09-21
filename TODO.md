@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Secure Downloads & Certificates UI & Browser Verification complete
-- Current task: Flutter download action with short-lived token, certificate list/detail, public verification page, PDF download, and completion celebration state.
-- Last completed task: Full end-to-end browser verification against live backend for protected course file download using temporary tokens (with 10-minute expiry guidance & 410 expired token handling), certificate list (`/certificates`), certificate detail (`/certificates/:code`), public certificate verification (`/certificates/verify/:code`), certificate PDF download, and course completion celebration dialog & banner. `flutter analyze` (0 issues), `flutter test` (12/12 passed), `flutter build web` verified.
+- Current phase: Prompt 14 backend complete; Flutter wishlist/review/coupon/admin UI remains pending.
+- Current task: Wishlist, reviews/moderation, and coupon/promotion backend integrated with checkout and verified.
+- Last completed task: Prompt 14 backend: authenticated wishlist CRUD, entitlement-gated review submission and admin moderation, server-authoritative coupon validation and atomic coupon usage during checkout. `npm test` passed 19/19; `npx prisma validate` and `npx prisma migrate status` passed; `/api/health` returned HTTP 200.
 - Blocking issues: None.
-- Next recommended task: Proceed to Prompt 14 / next scheduled prompt according to project requirements.
+- Next recommended task: Proceed to Prompt 15 Flutter Wishlist/Review/Coupon/Admin UI only; do not change the verified Prompt 14 backend unnecessarily.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -17,7 +17,7 @@
 | 5. Flutter Core UI | DONE | AppShell, responsive breakpoints, theming, navigation, and core states built |
 | 6. Flutter Course Catalog | DONE | Home, catalog, detail pages built with real API data and responsive layouts |
 | 7. Cart | DONE | Backend Cart API and Flutter Cart page complete; add to cart and cart sync verified |
-| 8. Coupons | NOT STARTED | |
+| 8. Coupons | IN PROGRESS | Backend promotion validation and checkout integration verified; Flutter coupon UI remains for Prompt 15 |
 | 9. Checkout and Orders | IN PROGRESS | COD checkout and customer order APIs/UI verified; VNPay backend is verified while Flutter payment UI remains pending |
 | 10. VNPay Sandbox | DONE | Signed Sandbox create, return, IPN, amount/reference/signature checks, idempotency, audit logs, docs, and tests verified |
 | 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
@@ -25,8 +25,8 @@
 | 13. Secure Downloads | DONE | Private admin upload, entitlement-protected hashed temporary tokens, single-use streaming, Flutter download action with expiry guidance, error handling & browser verified |
 | 14. Course Progress | IN PROGRESS | Required-lesson calculation is returned by lesson completion and verified; standalone progress API and Flutter UI remain |
 | 15. Certificates | DONE | Unique automatic issuance, private PDF generation, public verification, Flutter list/detail/verification screens, PDF download, celebration modal, tests & browser verified |
-| 16. Wishlist | NOT STARTED | |
-| 17. Reviews | NOT STARTED | |
+| 16. Wishlist | IN PROGRESS | Authenticated backend CRUD and tests verified; Flutter wishlist UI remains for Prompt 15 |
+| 17. Reviews | IN PROGRESS | Entitlement-gated review/moderation backend and tests verified; Flutter review UI remains for Prompt 15 |
 | 18. Admin Panel | NOT STARTED | |
 | 19. Security Audit | NOT STARTED | |
 | 20. SEO | NOT STARTED | |
@@ -149,15 +149,15 @@
 - [x] cart tests
 
 ## 8. Coupons
-- [ ] percentage coupon
-- [ ] fixed coupon
-- [ ] expiry
-- [ ] minimum order
-- [ ] maximum discount
-- [ ] usage limit
-- [ ] per-user restriction
+- [x] percentage coupon
+- [x] fixed coupon
+- [x] expiry
+- [x] minimum order
+- [x] maximum discount
+- [x] usage limit
+- [x] per-user restriction
 - [ ] Flutter coupon UI
-- [ ] tests
+- [x] tests
 
 ## 9. Checkout and Orders
 - [x] checkout transaction
@@ -241,23 +241,23 @@
 - [x] tests
 
 ## 16. Wishlist
-- [ ] add wishlist
-- [ ] remove wishlist
-- [ ] duplicate prevention
+- [x] add wishlist
+- [x] remove wishlist
+- [x] duplicate prevention
 - [ ] wishlist page
-- [ ] tests
+- [x] tests
 
 ## 17. Reviews
-- [ ] entitlement required
-- [ ] one review per user/course
-- [ ] rating 1–5
-- [ ] PENDING
-- [ ] APPROVED
-- [ ] REJECTED
-- [ ] admin moderation
-- [ ] approved rating aggregation
+- [x] entitlement required
+- [x] one review per user/course
+- [x] rating 1–5
+- [x] PENDING
+- [x] APPROVED
+- [x] REJECTED
+- [x] admin moderation
+- [x] approved rating aggregation
 - [ ] Flutter review UI
-- [ ] tests
+- [x] tests
 
 ## 18. Admin Panel
 - [ ] admin shell

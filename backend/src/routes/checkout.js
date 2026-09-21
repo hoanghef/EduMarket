@@ -11,7 +11,7 @@ router.post('/', requireAuth, requireCustomer, async (req, res, next) => {
     if (req.body?.method !== 'COD') {
       return res.status(400).json({ success: false, code: 'VALIDATION_ERROR', message: 'Only COD is available for this checkout.' });
     }
-    const order = await createCheckout(req.user.id, 'COD', req);
+    const order = await createCheckout(req.user.id, 'COD', req, req.body?.couponCode);
     return res.status(201).json({ success: true, data: { order } });
   } catch (error) {
     return next(error);

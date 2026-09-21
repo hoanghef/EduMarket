@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test src/**/*.test.js",
+    "test": "node --test --test-concurrency=1 src/**/*.test.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node prisma/seed.js"
