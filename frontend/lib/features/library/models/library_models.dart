@@ -269,3 +269,56 @@ class CourseProgressSummary {
     );
   }
 }
+
+// ── Secure Downloads ──────────────────────────────────────────────────────────
+
+class DownloadTokenResponse {
+  const DownloadTokenResponse({
+    required this.downloadUrl,
+    required this.expiresAt,
+    required this.maxDownloads,
+  });
+
+  final String downloadUrl;
+  final DateTime expiresAt;
+  final int maxDownloads;
+
+  factory DownloadTokenResponse.fromJson(Map<String, dynamic> json) =>
+      DownloadTokenResponse(
+        downloadUrl: json['downloadUrl'] as String? ?? '',
+        expiresAt: DateTime.tryParse(json['expiresAt'] as String? ?? '') ??
+            DateTime.now().add(const Duration(minutes: 10)),
+        maxDownloads: (json['maxDownloads'] as num?)?.toInt() ?? 1,
+      );
+}
+
+// ── Lesson Completion Result ──────────────────────────────────────────────────
+
+class LessonCompletionResult {
+  const LessonCompletionResult({
+    required this.created,
+    required this.percentage,
+    required this.isComplete,
+    this.certificateCode,
+    this.certificateCreated = false,
+  });
+
+  final bool created;
+  final int percentage;
+  final bool isComplete;
+  final String? certificateCode;
+  final bool certificateCreated;
+
+  factory LessonCompletionResult.fromJson(Map<String, dynamic> json) {
+    final progress = json['progress'] as Map<String, dynamic>? ?? {};
+    final cert = json['certificate'] as Map<String, dynamic>?;
+    return LessonCompletionResult(
+      created: json['created'] as bool? ?? false,
+      percentage: (progress['percentage'] as num?)?.toInt() ?? 0,
+      isComplete: progress['isComplete'] as bool? ?? false,
+      certificateCode: cert?['certificateCode'] as String?,
+      certificateCreated: json['certificateCreated'] as bool? ?? false,
+    );
+  }
+}
+

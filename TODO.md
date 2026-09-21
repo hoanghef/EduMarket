@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Prompt 12 certificate backend complete and verified
-- Current task: Customer certificate listing and owner-protected private PDF delivery implemented
-- Last completed task: Authenticated customers list only their own safe certificate metadata and can stream only their own private certificate PDF; IDOR attempts return 404. Public verification remains minimal and read-only. Backend test suite: 18/18 PASS; Prisma validation/migration status pass; health API: HTTP 200.
-- Blocking issues: No backend blocker for this scope. Browser manual verification remains pending (browser automation unavailable).
-- Next recommended task: After authorization, begin Prompt 13 Flutter certificate UI only; do not alter the completed certificate backend without a new requirement.
+- Current phase: Secure Downloads & Certificates UI & Browser Verification complete
+- Current task: Flutter download action with short-lived token, certificate list/detail, public verification page, PDF download, and completion celebration state.
+- Last completed task: Full end-to-end browser verification against live backend for protected course file download using temporary tokens (with 10-minute expiry guidance & 410 expired token handling), certificate list (`/certificates`), certificate detail (`/certificates/:code`), public certificate verification (`/certificates/verify/:code`), certificate PDF download, and course completion celebration dialog & banner. `flutter analyze` (0 issues), `flutter test` (12/12 passed), `flutter build web` verified.
+- Blocking issues: None.
+- Next recommended task: Proceed to Prompt 14 / next scheduled prompt according to project requirements.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -21,10 +21,10 @@
 | 9. Checkout and Orders | IN PROGRESS | COD checkout and customer order APIs/UI verified; VNPay backend is verified while Flutter payment UI remains pending |
 | 10. VNPay Sandbox | DONE | Signed Sandbox create, return, IPN, amount/reference/signature checks, idempotency, audit logs, docs, and tests verified |
 | 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
-| 12. Customer Library | DONE (pending browser test) | Backend list, protected course/lesson/file metadata access, idempotent lesson completion; Flutter LibraryScreen, CourseLearningScreen, LessonPlayerScreen, progress bar, revoked-access denial implemented & statically verified |
-| 13. Secure Downloads | DONE | Private admin upload, entitlement-protected hashed temporary tokens, single-use streaming, audit logs, and integration tests verified |
+| 12. Customer Library | DONE | Backend list, protected course/lesson/file metadata access, lesson completion; Flutter LibraryScreen, CourseLearningScreen, LessonPlayerScreen, progress bar, browser verified |
+| 13. Secure Downloads | DONE | Private admin upload, entitlement-protected hashed temporary tokens, single-use streaming, Flutter download action with expiry guidance, error handling & browser verified |
 | 14. Course Progress | IN PROGRESS | Required-lesson calculation is returned by lesson completion and verified; standalone progress API and Flutter UI remain |
-| 15. Certificates | IN PROGRESS | Prompt 12 backend is complete: unique automatic issuance, private PDF generation, public verification, owner-only list/download, duplicate prevention, and tests verified; Flutter UI remains Prompt 13 |
+| 15. Certificates | DONE | Unique automatic issuance, private PDF generation, public verification, Flutter list/detail/verification screens, PDF download, celebration modal, tests & browser verified |
 | 16. Wishlist | NOT STARTED | |
 | 17. Reviews | NOT STARTED | |
 | 18. Admin Panel | NOT STARTED | |
@@ -206,7 +206,7 @@
 - [x] Flutter library page
 - [x] continue learning
 - [x] revoked access state
-- [ ] browser tests
+- [x] browser tests (verified via browser subagent)
 
 ## 13. Secure Downloads
 - [x] private storage
@@ -236,7 +236,7 @@
 - [x] public verification
 - [x] certificate list
 - [x] certificate download
-- [ ] Flutter certificate page
+- [x] Flutter certificate page (list, detail, verification screens & PDF download)
 - [x] duplicate prevention
 - [x] tests
 

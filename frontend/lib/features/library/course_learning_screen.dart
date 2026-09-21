@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/download_helper.dart';
 import '../../core/widgets/app_shell.dart';
 import 'models/library_models.dart';
 import 'providers/library_provider.dart';
@@ -150,6 +151,10 @@ class _CourseLearningScreenState extends ConsumerState<CourseLearningScreen> {
 
                   // ── Progress bar ─────────────────────────────────────────
                   _ProgressBar(progress: progress),
+                  if (progress.isComplete) ...[
+                    const SizedBox(height: 20),
+                    _CompletionCelebrationBanner(courseTitle: course.title),
+                  ],
                   const SizedBox(height: 32),
 
                   // ── Layout: lesson list + files ──────────────────────────
@@ -689,9 +694,107 @@ class _FilesSection extends StatelessWidget {
   }
 }
 
-class _FileTile extends StatelessWidget {
+class _CompletionCelebrationBanner extends StatelessWidget {
+  const _CompletionCelebrationBanner({required this.courseTitle});
+  final String courseTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF59E0B),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.workspace_premium,
+                    color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '🎉 Chúc mừng bạn đã hoàn thành 100% khóa học!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Chứng chỉ hoàn thành cho khóa học "$courseTitle" đã sẵn sàng để tải xuống và xác thực.',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF78350F),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFD97706),
+                ),
+                onPressed: () => context.go('/certificates'),
+                icon: const Icon(Icons.card_membership, size: 18),
+                label: const Text('Xem chứng chỉ của tôi'),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF92400E),
+                  side: const BorderSide(color: Color(0xFFD97706)),
+                ),
+                onPressed: () => context.go('/certificates/verify'),
+                icon: const Icon(Icons.verified_outlined, size: 18),
+                label: const Text('Tra cứu xác thực công khai'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FileTile extends ConsumerStatefulWidget {
   const _FileTile({required this.file});
   final CourseFileModel file;
+
+  @override
+  ConsumerState<_FileTile> createState() => _FileTileState();
+}
+
+class _FileTileState extends ConsumerState<_FileTile> {
+  bool _isDownloading = false;
 
   IconData _iconForMime(String mime) {
     if (mime.contains('pdf')) return Icons.picture_as_pdf_outlined;
@@ -703,8 +806,95 @@ class _FileTile extends StatelessWidget {
     return Icons.attach_file_outlined;
   }
 
+  Future<void> _handleDownload() async {
+    setState(() => _isDownloading = true);
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '⏳ Đang yêu cầu tải xuống an toàn... (Token bảo mật 10 phút, tối đa 1 lượt tải)',
+        ),
+        duration: Duration(seconds: 3),
+      ),
+    );
+
+    try {
+      // 1. Request short-lived download token
+      final tokenResponse = await ref
+          .read(libraryRepositoryProvider)
+          .requestDownloadToken(widget.file.id);
+
+      // 2. Download file stream via the temporary URL
+      final bytes = await ref
+          .read(libraryRepositoryProvider)
+          .downloadFile(tokenResponse.downloadUrl);
+
+      // 3. Save bytes to client browser
+      saveFileBytes(bytes, widget.file.originalName, widget.file.mimeType);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Đã tải xuống "${widget.file.originalName}" thành công!'),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        String errorMsg = 'Không thể tải tập tin.';
+        final responseData = e.response?.data;
+        final code = responseData is Map ? responseData['code'] : null;
+
+        if (e.response?.statusCode == 410 || code == 'DOWNLOAD_TOKEN_EXPIRED') {
+          errorMsg =
+              'Liên kết tải xuống đã hết hạn (10 phút). Vui lòng nhấn nút tải lại để tạo liên kết mới.';
+        } else if (e.response?.statusCode == 410 ||
+            code == 'DOWNLOAD_TOKEN_EXHAUSTED') {
+          errorMsg =
+              'Liên kết tải xuống đã đạt số lượt tải tối đa (1 lần). Vui lòng nhấn nút tải lại.';
+        } else if (e.response?.statusCode == 403 ||
+            code == 'COURSE_ACCESS_REVOKED') {
+          errorMsg =
+              'Quyền truy cập khóa học đã bị thu hồi. Không thể tải tài liệu.';
+        } else if (e.response?.statusCode == 403 ||
+            code == 'COURSE_ACCESS_DENIED') {
+          errorMsg =
+              'Bạn chưa sở hữu khóa học này để tải tài liệu đính kèm.';
+        } else if (responseData is Map && responseData['message'] != null) {
+          errorMsg = responseData['message'] as String;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: AppTheme.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tải tập tin: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDownloading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final file = widget.file;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -739,20 +929,18 @@ class _FileTile extends StatelessWidget {
               ],
             ),
           ),
-          // Download placeholder (Phase 13 will wire real download token)
           Tooltip(
-            message: 'Tải xuống (sắp ra mắt)',
+            message: 'Tải xuống an toàn (Token 10 phút, 1 lần tải)',
             child: IconButton(
-              icon: const Icon(Icons.download_outlined, size: 20),
-              color: AppTheme.onSurfaceVariant,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Tải xuống an toàn sẽ sẵn sàng ở giai đoạn tiếp theo.'),
-                  ),
-                );
-              },
+              icon: _isDownloading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.download_outlined, size: 20),
+              color: AppTheme.primary,
+              onPressed: _isDownloading ? null : _handleDownload,
             ),
           ),
         ],

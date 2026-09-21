@@ -150,7 +150,13 @@ class _NavbarState extends ConsumerState<_Navbar> {
                       icon: const Icon(Icons.library_books_outlined, size: 18),
                       label: const Text('Thư viện'),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      tooltip: 'Chứng chỉ của tôi',
+                      icon: const Icon(Icons.workspace_premium_outlined, size: 22),
+                      onPressed: () => context.go('/certificates'),
+                    ),
+                    const SizedBox(width: 4),
                     TextButton.icon(
                       onPressed: () => context.go('/account/orders'),
                       icon: const Icon(Icons.receipt_long_outlined, size: 18),
@@ -221,6 +227,8 @@ class _NavbarState extends ConsumerState<_Navbar> {
                   if (isLoggedIn) ...[
                     _MobileNavLink(
                         label: 'Thư viện của tôi', path: '/library'),
+                    _MobileNavLink(
+                        label: 'Chứng chỉ của tôi', path: '/certificates'),
                     _MobileNavLink(
                         label: 'Đơn hàng của tôi', path: '/account/orders'),
                     const SizedBox(height: 8),
@@ -345,7 +353,7 @@ class _NavSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 240),
+      constraints: const BoxConstraints(maxWidth: 180),
       height: 38,
       child: TextField(
         decoration: InputDecoration(
@@ -468,6 +476,8 @@ class _FooterDesktop extends StatelessWidget {
                   ('Đăng nhập', '/login'),
                   ('Đăng ký', '/register'),
                   ('Thư viện của tôi', '/library'),
+                  ('Chứng chỉ của tôi', '/certificates'),
+                  ('Xác thực chứng chỉ', '/certificates/verify'),
                 ],
               ),
             ),

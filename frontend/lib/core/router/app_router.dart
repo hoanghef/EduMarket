@@ -15,6 +15,9 @@ import '../../features/orders/order_detail_screen.dart';
 import '../../features/library/library_screen.dart';
 import '../../features/library/course_learning_screen.dart';
 import '../../features/library/lesson_player_screen.dart';
+import '../../features/certificates/certificate_list_screen.dart';
+import '../../features/certificates/certificate_detail_screen.dart';
+import '../../features/certificates/certificate_verification_screen.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 
@@ -35,7 +38,8 @@ class RouterNotifier extends ChangeNotifier {
     final isProtected = location.startsWith('/cart') ||
         location.startsWith('/checkout') ||
         location.startsWith('/account') ||
-        location.startsWith('/library');
+        location.startsWith('/library') ||
+        location == '/certificates';
 
     final isAuthRoute = location == '/login' || location == '/register';
 
@@ -163,6 +167,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'orderDetail',
         builder: (context, state) =>
             OrderDetailScreen(id: state.pathParameters['id']!),
+      ),
+      // ── Certificates ────────────────────────────────────────────────────────
+      GoRoute(
+        path: '/certificates',
+        name: 'certificates',
+        builder: (context, _) => const CertificateListScreen(),
+      ),
+      GoRoute(
+        path: '/certificates/verify',
+        name: 'certificateVerify',
+        builder: (context, state) => CertificateVerificationScreen(
+          initialCode: state.uri.queryParameters['code'],
+        ),
+      ),
+      GoRoute(
+        path: '/certificates/verify/:code',
+        name: 'certificateVerifyWithCode',
+        builder: (context, state) => CertificateVerificationScreen(
+          initialCode: state.pathParameters['code'],
+        ),
+      ),
+      GoRoute(
+        path: '/certificates/:code',
+        name: 'certificateDetail',
+        builder: (context, state) => CertificateDetailScreen(
+          code: state.pathParameters['code']!,
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

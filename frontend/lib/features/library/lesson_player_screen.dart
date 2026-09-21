@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import 'models/library_models.dart';
 import 'providers/library_provider.dart';
+import 'widgets/completion_celebration_dialog.dart';
 
 /// Lesson detail / player screen.
 ///
@@ -80,16 +81,24 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen> {
   Future<void> _markComplete() async {
     setState(() => _completing = true);
     try {
-      await ref
+      final result = await ref
           .read(courseProgressProvider(widget.courseId).notifier)
           .complete(widget.lessonId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Bài học đã được đánh dấu hoàn thành!'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
+        if (result?.isComplete == true) {
+          await CompletionCelebrationDialog.show(
+            context,
+            courseTitle: _course?.title ?? 'Khóa học',
+            certificateCode: result?.certificateCode,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Bài học đã được đánh dấu hoàn thành!'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

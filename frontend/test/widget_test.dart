@@ -20,7 +20,12 @@ import 'package:edumarket/features/cart/cart_screen.dart';
 import 'package:edumarket/features/checkout/checkout_screen.dart';
 import 'package:edumarket/features/orders/providers/order_provider.dart';
 import 'package:edumarket/features/orders/models/order_models.dart';
+import 'package:dio/dio.dart';
 import 'package:edumarket/features/orders/order_history_screen.dart';
+import 'package:edumarket/features/certificates/models/certificate_models.dart';
+import 'package:edumarket/features/certificates/providers/certificate_provider.dart';
+import 'package:edumarket/features/certificates/certificate_list_screen.dart';
+import 'package:edumarket/features/certificates/certificate_verification_screen.dart';
 
 // ── Fake Repositories ────────────────────────────────────────────────────────
 
@@ -137,10 +142,46 @@ class FakeOrderRepository implements OrderRepository {
   }
 }
 
+class FakeCertificateRepository implements CertificateRepository {
+  FakeCertificateRepository({this.certificates = const []});
+  final List<CertificateItem> certificates;
+
+  @override
+  Future<List<CertificateItem>> getMyCertificates() async => certificates;
+
+  @override
+  Future<CertificateVerificationResult> verifyCertificate(String code) async {
+    if (code == 'EDU-2026-F98B237DAABBCCDD11223344') {
+      return CertificateVerificationResult(
+        verified: true,
+        certificateCode: code,
+        studentName: 'Vũ Hoàng',
+        courseName: 'Node.js và Express cho người mới',
+        issuedAt: DateTime(2026, 9, 21),
+      );
+    }
+    throw DioException(
+      requestOptions: RequestOptions(path: '/api/certificates/$code/verify'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/api/certificates/$code/verify'),
+        statusCode: 404,
+        data: {'code': 'CERTIFICATE_NOT_FOUND', 'message': 'Not found'},
+      ),
+    );
+  }
+
+  @override
+  Future<List<int>> downloadCertificatePdf(String code) async =>
+      [37, 80, 68, 70, 45]; // %PDF-
+}
+
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 void main() {
-  ProviderContainer createContainer({UserModel? loggedInUser}) {
+  ProviderContainer createContainer({
+    UserModel? loggedInUser,
+    List<CertificateItem> certificates = const [],
+  }) {
     return ProviderContainer(
       overrides: [
         healthProvider.overrideWith(
@@ -158,6 +199,9 @@ void main() {
         catalogRepositoryProvider.overrideWithValue(FakeCatalogRepository()),
         cartRepositoryProvider.overrideWithValue(FakeCartRepository()),
         orderRepositoryProvider.overrideWithValue(FakeOrderRepository()),
+        certificateRepositoryProvider.overrideWithValue(
+          FakeCertificateRepository(certificates: certificates),
+        ),
       ],
     );
   }
@@ -372,5 +416,85 @@ void main() {
     await pumpUntilResolved(tester);
 
     expect(find.text('Đăng nhập EduMarket'), findsOneWidget);
+  });
+
+  testWidgets('CertificateListScreen renders empty state when user has no certificates', (WidgetTester tester) async {
+    final container = createContainer();
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: CertificateListScreen(),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Chứng chỉ của tôi'), findsWidgets);
+    expect(find.text('Chưa có chứng chỉ nào'), findsOneWidget);
+    expect(find.text('Đến thư viện học tập'), findsOneWidget);
+  });
+
+  testWidgets('CertificateListScreen renders certificate card when user has certificates', (WidgetTester tester) async {
+    final sampleCertificate = CertificateItem(
+      certificateCode: 'EDU-2026-F98B237DAABBCCDD11223344',
+      courseTitle: 'Node.js và Express cho người mới',
+      issuedAt: DateTime(2026, 9, 21),
+      verificationUrl: '/api/certificates/EDU-2026-F98B237DAABBCCDD11223344/verify',
+    );
+    final container = createContainer(certificates: [sampleCertificate]);
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: CertificateListScreen(),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Node.js và Express cho người mới'), findsOneWidget);
+    expect(find.text('EDU-2026-F98B237DAABBCCDD11223344'), findsOneWidget);
+    expect(find.text('Tải PDF'), findsOneWidget);
+    expect(find.text('Xem chi tiết'), findsOneWidget);
+  });
+
+  testWidgets('CertificateVerificationScreen renders search input and verifies valid code', (WidgetTester tester) async {
+    final container = createContainer();
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: CertificateVerificationScreen(),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Xác Thực Chứng Chỉ Trực Tuyến'), findsOneWidget);
+    expect(find.text('Tra cứu'), findsOneWidget);
+
+    final inputFinder = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField &&
+          widget.decoration?.hintText?.contains('EDU-') == true,
+    );
+    expect(inputFinder, findsOneWidget);
+    await tester.enterText(inputFinder, 'EDU-2026-F98B237DAABBCCDD11223344');
+    await tester.tap(find.text('Tra cứu'));
+    await pumpUntilResolved(tester);
+
+    expect(find.text('CHỨNG CHỈ HỢP LỆ VÀ CHÍNH THỨC'), findsOneWidget);
+    expect(find.text('Vũ Hoàng'), findsOneWidget);
+    expect(find.text('Node.js và Express cho người mới'), findsOneWidget);
   });
 }

@@ -34,8 +34,26 @@ class LibraryRepository {
   }
 
   /// POST /api/library/lessons/:lessonId/complete  – idempotent completion
-  Future<void> completeLesson(String lessonId) async {
-    await _dio.post('/api/library/lessons/$lessonId/complete');
+  Future<LessonCompletionResult> completeLesson(String lessonId) async {
+    final response = await _dio.post('/api/library/lessons/$lessonId/complete');
+    return LessonCompletionResult.fromJson(
+        response.data['data'] as Map<String, dynamic>);
+  }
+
+  /// POST /api/files/:fileId/download-token  – generate short-lived download token
+  Future<DownloadTokenResponse> requestDownloadToken(String fileId) async {
+    final response = await _dio.post('/api/files/$fileId/download-token');
+    return DownloadTokenResponse.fromJson(
+        response.data['data'] as Map<String, dynamic>);
+  }
+
+  /// GET /api/download/:token  – stream file via short-lived token
+  Future<List<int>> downloadFile(String downloadUrl) async {
+    final response = await _dio.get<List<int>>(
+      downloadUrl,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data ?? [];
   }
 }
 
@@ -80,10 +98,12 @@ class CourseProgressNotifier
     );
   }
 
-  Future<void> complete(String lessonId) async {
-    if (state.completedLessonIds.contains(lessonId)) return;
-    await ref.read(libraryRepositoryProvider).completeLesson(lessonId);
+  Future<LessonCompletionResult?> complete(String lessonId) async {
+    if (state.completedLessonIds.contains(lessonId)) return null;
+    final result =
+        await ref.read(libraryRepositoryProvider).completeLesson(lessonId);
     state = state.markLesson(lessonId);
+    return result;
   }
 }
 
