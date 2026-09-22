@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/courses/models/catalog_models.dart';
+import '../../features/wishlist/providers/wishlist_provider.dart';
 import '../theme/app_theme.dart';
 import 'star_rating.dart';
 
@@ -70,12 +72,45 @@ class _VerticalCardState extends State<_VerticalCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Thumbnail ───────────────────────────────────────────────────
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: _CourseThumbnail(url: course.thumbnailUrl, title: course.title),
-                ),
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: _CourseThumbnail(url: course.thumbnailUrl, title: course.title),
+                    ),
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final isFav = ref.watch(wishlistProvider).containsCourse(course.id);
+                        return Material(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () async {
+                              try {
+                                await ref.read(wishlistProvider.notifier).toggleWishlist(course.id);
+                              } catch (_) {}
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(6.0),
+                              child: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: isFav ? AppTheme.error : Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
               // ── Body ─────────────────────────────────────────────────────────
               Padding(
@@ -147,12 +182,45 @@ class _HorizontalCard extends StatelessWidget {
             // Thumbnail
             SizedBox(
               width: 160,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: _CourseThumbnail(url: course.thumbnailUrl, title: course.title),
-                ),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: _CourseThumbnail(url: course.thumbnailUrl, title: course.title),
+                    ),
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final isFav = ref.watch(wishlistProvider).containsCourse(course.id);
+                        return Material(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () async {
+                              try {
+                                await ref.read(wishlistProvider.notifier).toggleWishlist(course.id);
+                              } catch (_) {}
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(5.0),
+                              child: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: isFav ? AppTheme.error : Colors.white,
+                                size: 14,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
             // Info
@@ -261,32 +329,37 @@ class _PriceRow extends StatelessWidget {
         ),
       );
     }
-    return Row(
-      children: [
-        Text(
-          _formatPrice(course.effectivePrice),
-          style: const TextStyle(
-            color: AppTheme.primary,
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-          ),
-        ),
-        if (course.isOnSale) ...[
-          const SizedBox(width: 6),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Text(
-            _formatPrice(course.price),
+            _formatPrice(course.effectivePrice),
             style: const TextStyle(
-              color: AppTheme.onSurfaceVariant,
-              decoration: TextDecoration.lineThrough,
-              fontSize: 12,
+              color: AppTheme.primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
             ),
           ),
-          const SizedBox(width: 4),
-          _SaleBadge(
-            discount: (((course.price - course.salePrice!) / course.price) * 100).round(),
-          ),
+          if (course.isOnSale) ...[
+            const SizedBox(width: 6),
+            Text(
+              _formatPrice(course.price),
+              style: const TextStyle(
+                color: AppTheme.onSurfaceVariant,
+                decoration: TextDecoration.lineThrough,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(width: 4),
+            _SaleBadge(
+              discount: (((course.price - course.salePrice!) / course.price) * 100).round(),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 

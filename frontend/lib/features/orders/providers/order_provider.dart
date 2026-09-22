@@ -11,8 +11,12 @@ class OrderRepository {
   final Dio _dio;
   OrderRepository(this._dio);
 
-  Future<OrderModel> checkoutCod() async {
-    final response = await _dio.post('/api/checkout', data: {'method': 'COD'});
+  Future<OrderModel> checkoutCod({String? couponCode}) async {
+    final data = <String, dynamic>{'method': 'COD'};
+    if (couponCode != null && couponCode.trim().isNotEmpty) {
+      data['couponCode'] = couponCode.trim().toUpperCase();
+    }
+    final response = await _dio.post('/api/checkout', data: data);
     return OrderModel.fromJson(response.data['data']['order']);
   }
 

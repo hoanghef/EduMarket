@@ -5,6 +5,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import 'models/cart_models.dart';
 import 'providers/cart_provider.dart';
+import 'providers/coupon_provider.dart';
+import 'widgets/coupon_input_card.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -204,34 +206,60 @@ class _CartItemsList extends ConsumerWidget {
   }
 }
 
-class _CartSummary extends StatelessWidget {
+class _CartSummary extends ConsumerWidget {
   const _CartSummary({required this.cart});
   final CartModel cart;
 
+  String _fmtPrice(double p) {
+    final n = p.toInt();
+    return n.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+$)'),
+          (m) => '${m[1]}.',
+        );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final couponState = ref.watch(couponProvider);
+    final applied = couponState.coupon;
+
+    final subtotal = applied != null ? applied.subtotal : cart.subtotal;
+    final discount = applied != null ? applied.discountAmount : 0.0;
+    final total = applied != null ? applied.totalAmount : cart.subtotal;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Tóm tắt đơn hàng', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 24),
+            const Text('Tóm tắt đơn hàng',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            const CouponInputCard(),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Tạm tính:', style: TextStyle(color: AppTheme.onSurfaceVariant)),
-                Text('${cart.subtotal.toInt()}₫', style: const TextStyle(fontWeight: FontWeight.w600)),
+                const Text('Tạm tính:',
+                    style: TextStyle(color: AppTheme.onSurfaceVariant)),
+                Text('${_fmtPrice(subtotal)}₫',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 12),
-            // Coupon Placeholder
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Giảm giá:', style: TextStyle(color: AppTheme.onSurfaceVariant)),
-                Text('0₫', style: TextStyle(fontWeight: FontWeight.w600)),
+                const Text('Giảm giá:',
+                    style: TextStyle(color: AppTheme.onSurfaceVariant)),
+                Text(
+                  discount > 0 ? '-${_fmtPrice(discount)}₫' : '0₫',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: discount > 0 ? AppTheme.success : null,
+                  ),
+                ),
               ],
             ),
             const Padding(
@@ -241,15 +269,24 @@ class _CartSummary extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Tổng cộng:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                Text('${cart.subtotal.toInt()}₫', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: AppTheme.primary)),
+                const Text('Tổng cộng:',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(
+                  '${_fmtPrice(total)}₫',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                      color: AppTheme.primary),
+                ),
               ],
             ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => context.go('/checkout'),
-              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: const Text('Thanh toán', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16)),
+              child: const Text('Thanh toán',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             ),
           ],
         ),

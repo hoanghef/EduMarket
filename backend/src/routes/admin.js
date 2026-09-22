@@ -111,4 +111,255 @@ router.patch('/reviews/:id/moderate', async (req, res, next) => {
   } catch (error) { return next(error); }
 });
 
+router.get('/dashboard', async (_req, res, next) => {
+  try {
+    const [totalRevResult, orderCount, customerCount, courseCount, recentOrders, bestSellingCourses] = await Promise.all([
+      prisma.order.aggregate({
+        where: { status: { in: ['PAID', 'COMPLETED'] } },
+        _sum: { totalAmount: true },
+      }),
+      prisma.order.count(),
+      prisma.user.count({ where: { role: 'CUSTOMER' } }),
+      prisma.course.count(),
+      prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { fullName: true, email: true } },
+          payment: { select: { method: true, status: true } },
+        },
+      }),
+      prisma.course.findMany({
+        take: 5,
+        orderBy: [{ enrollmentCount: 'desc' }, { ratingAverage: 'desc' }],
+        select: {
+          id: true,
+          title: true,
+          enrollmentCount: true,
+          price: true,
+          ratingAverage: true,
+        },
+      }),
+    ]);
+
+    const totalRevenue = totalRevResult._sum.totalAmount ? Number(totalRevResult._sum.totalAmount) : 0;
+
+    const paidOrders = await prisma.order.findMany({
+      where: { status: { in: ['PAID', 'COMPLETED'] } },
+      select: { totalAmount: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const monthlyMap = {};
+    for (const ord of paidOrders) {
+      const monthKey = ord.createdAt.toISOString().slice(0, 7);
+      monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + Number(ord.totalAmount);
+    }
+    const monthlyRevenue = Object.entries(monthlyMap).map(([month, revenue]) => ({ month, revenue }));
+
+    return res.json({
+      success: true,
+      data: {
+        totalRevenue,
+        orderCount,
+        customerCount,
+        courseCount,
+        recentOrders,
+        bestSellingCourses,
+        monthlyRevenue,
+      },
+    });
+  } catch (error) { return next(error); }
+});
+
+router.get('/reports/revenue', async (_req, res, next) => {
+  try {
+    const [totalPaid, codRevenue, vnpayRevenue] = await Promise.all([
+      prisma.order.aggregate({
+        where: { status: { in: ['PAID', 'COMPLETED'] } },
+        _sum: { totalAmount: true, discountAmount: true, subtotal: true },
+        _count: { id: true },
+      }),
+      prisma.payment.aggregate({
+        where: { method: 'COD', status: 'SUCCESS' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      prisma.payment.aggregate({
+        where: { method: 'VNPAY', status: 'SUCCESS' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+    ]);
+
+    return res.json({
+      success: true,
+      data: {
+        totalRevenue: totalPaid._sum.totalAmount ? Number(totalPaid._sum.totalAmount) : 0,
+        totalDiscount: totalPaid._sum.discountAmount ? Number(totalPaid._sum.discountAmount) : 0,
+        totalSubtotal: totalPaid._sum.subtotal ? Number(totalPaid._sum.subtotal) : 0,
+        paidOrdersCount: totalPaid._count.id,
+        cod: {
+          revenue: codRevenue._sum.amount ? Number(codRevenue._sum.amount) : 0,
+          count: codRevenue._count.id,
+        },
+        vnpay: {
+          revenue: vnpayRevenue._sum.amount ? Number(vnpayRevenue._sum.amount) : 0,
+          count: vnpayRevenue._count.id,
+        },
+      },
+    });
+  } catch (error) { return next(error); }
+});
+
+router.get('/orders', async (req, res, next) => {
+  try {
+    const where = {};
+    if (req.query.status) where.status = req.query.status;
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+        payment: true,
+        items: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return res.json({ success: true, data: { items: orders } });
+  } catch (error) { return next(error); }
+});
+
+router.get('/users', async (req, res, next) => {
+  try {
+    const where = {};
+    if (req.query.role) where.role = req.query.role;
+    if (req.query.q) {
+      const q = String(req.query.q).trim();
+      where.OR = [
+        { fullName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        _count: { select: { orders: true, entitlements: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return res.json({ success: true, data: { items: users } });
+  } catch (error) { return next(error); }
+});
+
+router.get('/reviews', async (req, res, next) => {
+  try {
+    const where = {};
+    if (req.query.status) where.status = req.query.status;
+    const reviews = await prisma.review.findMany({
+      where,
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+        course: { select: { id: true, title: true, slug: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return res.json({ success: true, data: { items: reviews } });
+  } catch (error) { return next(error); }
+});
+
+router.get('/coupons', async (_req, res, next) => {
+  try {
+    const coupons = await prisma.coupon.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { orders: true, usages: true } } },
+    });
+    return res.json({ success: true, data: { items: coupons } });
+  } catch (error) { return next(error); }
+});
+
+router.post('/coupons', async (req, res, next) => {
+  try {
+    const code = text(req.body.code, 64, true)?.toUpperCase();
+    const discountType = req.body.discountType;
+    const discountValue = money(req.body.discountValue, true);
+    if (!code || !/^[A-Z0-9][A-Z0-9_-]{1,63}$/.test(code) || !['PERCENTAGE', 'FIXED'].includes(discountType) || !discountValue) {
+      return fail(res);
+    }
+    const startsAt = req.body.startsAt ? new Date(req.body.startsAt) : new Date();
+    const endsAt = req.body.endsAt ? new Date(req.body.endsAt) : new Date(Date.now() + 30 * 86400000);
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime()) || startsAt >= endsAt) {
+      return fail(res);
+    }
+    const coupon = await prisma.coupon.create({
+      data: {
+        code,
+        description: text(req.body.description, 500),
+        discountType,
+        discountValue,
+        minimumOrderAmount: money(req.body.minimumOrderAmount),
+        maximumDiscountAmount: money(req.body.maximumDiscountAmount),
+        usageLimit: positiveInt(req.body.usageLimit),
+        perUserLimit: positiveInt(req.body.perUserLimit) ?? 1,
+        startsAt,
+        endsAt,
+        isActive: req.body.isActive !== false,
+      },
+    });
+    await audit(req, 'COUPON_CREATED', 'Coupon', coupon.id);
+    return res.status(201).json({ success: true, data: { coupon } });
+  } catch (error) {
+    if (error.code === 'P2002') return res.status(409).json({ success: false, code: 'DUPLICATE_COUPON', message: 'Coupon code already exists.' });
+    return next(error);
+  }
+});
+
+router.patch('/coupons/:id', async (req, res, next) => {
+  try {
+    const data = {};
+    if (req.body.isActive !== undefined) {
+      if (typeof req.body.isActive !== 'boolean') return fail(res);
+      data.isActive = req.body.isActive;
+    }
+    if (req.body.description !== undefined) {
+      data.description = text(req.body.description, 500);
+    }
+    if (req.body.usageLimit !== undefined) {
+      data.usageLimit = positiveInt(req.body.usageLimit);
+    }
+    const coupon = await prisma.coupon.update({ where: { id: req.params.id }, data });
+    await audit(req, 'COUPON_UPDATED', 'Coupon', coupon.id);
+    return res.json({ success: true, data: { coupon } });
+  } catch (error) {
+    if (error.code === 'P2025') return res.status(404).json({ success: false, code: 'COUPON_NOT_FOUND', message: 'Coupon not found.' });
+    return next(error);
+  }
+});
+
+router.get('/entitlements', async (req, res, next) => {
+  try {
+    const where = {};
+    if (req.query.status) where.status = req.query.status;
+    const items = await prisma.courseEntitlement.findMany({
+      where,
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+        course: { select: { id: true, title: true, slug: true } },
+        order: { select: { id: true, orderNumber: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return res.json({ success: true, data: { items } });
+  } catch (error) { return next(error); }
+});
+
 module.exports = router;

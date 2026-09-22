@@ -9,6 +9,8 @@ import '../../core/widgets/star_rating.dart';
 import '../courses/models/catalog_models.dart';
 import '../courses/providers/catalog_provider.dart';
 import '../cart/providers/cart_provider.dart';
+import '../reviews/widgets/course_reviews_section.dart';
+import '../wishlist/providers/wishlist_provider.dart';
 
 /// `/khoa-hoc/:slug`
 class CourseDetailScreen extends ConsumerWidget {
@@ -280,6 +282,14 @@ class _CourseContent extends StatelessWidget {
           const SizedBox(height: 32),
         ],
 
+        // ── Reviews Section ───────────────────────────────────────────────────
+        CourseReviewsSection(
+          courseId: course.id,
+          ratingAverage: course.ratingAverage,
+          ratingCount: course.ratingCount,
+        ),
+        const SizedBox(height: 32),
+
         // ── Recommendations ───────────────────────────────────────────────────
         asyncRecs.when(
           loading: () => const LoadingRow(itemCount: 4),
@@ -482,15 +492,54 @@ class _BuyCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('Thêm vào wishlist'),
-              ),
+            Builder(
+              builder: (context) {
+                final isInWishlist =
+                    ref.watch(wishlistProvider).containsCourse(course.id);
+                return SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      try {
+                        final added = await ref
+                            .read(wishlistProvider.notifier)
+                            .toggleWishlist(course.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(added
+                                  ? 'Đã thêm khóa học vào danh sách yêu thích!'
+                                  : 'Đã xóa khóa học khỏi danh sách yêu thích!'),
+                              action: SnackBarAction(
+                                label: 'Xem yêu thích',
+                                onPressed: () => context.go('/wishlist'),
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Lỗi: $e'),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    icon: Icon(
+                      isInWishlist ? Icons.favorite : Icons.favorite_border,
+                      color: isInWishlist ? AppTheme.error : null,
+                      size: 18,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    label: Text(isInWishlist ? 'Đã lưu yêu thích' : 'Thêm vào yêu thích'),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             // Stats

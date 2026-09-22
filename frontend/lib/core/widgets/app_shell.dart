@@ -77,10 +77,13 @@ class _NavbarState extends ConsumerState<_Navbar> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Breakpoint.isMobile(context);
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isLoggedIn = authState.isAuthenticated && user != null;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompact = screenWidth < Breakpoint.tablet;
+    final showSearchBar =
+        !isLoggedIn ? screenWidth >= 1200 : screenWidth >= 1500;
 
     return Material(
       color: Colors.white,
@@ -130,81 +133,134 @@ class _NavbarState extends ConsumerState<_Navbar> {
                 ),
 
                 // Desktop: nav links + search + cart + auth
-                if (!isMobile) ...[
-                  const SizedBox(width: 24),
+                if (!isCompact) ...[
+                  const SizedBox(width: 16),
                   _NavLink(label: 'Trang chủ', path: '/'),
                   _NavLink(label: 'Khóa học', path: '/khoa-hoc'),
                   const Spacer(),
-                  const Flexible(child: _NavSearchBar()),
-                  const SizedBox(width: 12),
-                  // Cart button
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showSearchBar) ...[
+                            const SizedBox(width: 180, child: _NavSearchBar()),
+                            const SizedBox(width: 8),
+                          ],
+                          // Wishlist button
+                          IconButton(
+                            icon: const Icon(Icons.favorite_border, size: 22),
+                            tooltip: 'Yêu thích',
+                            onPressed: () => context.go('/wishlist'),
+                          ),
+                          const SizedBox(width: 4),
+                          // Cart button
+                          IconButton(
+                            icon: const Icon(Icons.shopping_cart_outlined, size: 22),
+                            tooltip: 'Giỏ hàng',
+                            onPressed: () => context.go('/cart'),
+                          ),
+                          const SizedBox(width: 4),
+                          if (isLoggedIn) ...[
+                            TextButton.icon(
+                              onPressed: () => context.go('/library'),
+                              icon: const Icon(Icons.library_books_outlined, size: 18),
+                              label: const Text('Thư viện'),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              tooltip: 'Chứng chỉ của tôi',
+                              icon: const Icon(Icons.workspace_premium_outlined, size: 22),
+                              onPressed: () => context.go('/certificates'),
+                            ),
+                            const SizedBox(width: 4),
+                            TextButton.icon(
+                              onPressed: () => context.go('/account/orders'),
+                              icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                              label: const Text('Đơn hàng'),
+                            ),
+                            if (user.isAdmin) ...[
+                              const SizedBox(width: 4),
+                              FilledButton.tonal(
+                                onPressed: () => context.go('/admin'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 8),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.shield_outlined, size: 15),
+                                    SizedBox(width: 4),
+                                    Text('Quản trị', style: TextStyle(fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.person_outline,
+                                      size: 16, color: AppTheme.primary),
+                                  const SizedBox(width: 4),
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 110),
+                                    child: Text(
+                                      user.fullName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            OutlinedButton(
+                              onPressed: () => ref.read(authProvider.notifier).logout(),
+                              child: const Text('Đăng xuất'),
+                            ),
+                          ] else ...[
+                            OutlinedButton(
+                              onPressed: () => context.go('/login'),
+                              child: const Text('Đăng nhập'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: () => context.go('/register'),
+                              child: const Text('Đăng ký'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.favorite_border, size: 22),
+                    tooltip: 'Yêu thích',
+                    onPressed: () => context.go('/wishlist'),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.shopping_cart_outlined, size: 22),
                     tooltip: 'Giỏ hàng',
                     onPressed: () => context.go('/cart'),
                   ),
-                  const SizedBox(width: 8),
-                  if (isLoggedIn) ...[
-                    TextButton.icon(
-                      onPressed: () => context.go('/library'),
-                      icon: const Icon(Icons.library_books_outlined, size: 18),
-                      label: const Text('Thư viện'),
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      tooltip: 'Chứng chỉ của tôi',
-                      icon: const Icon(Icons.workspace_premium_outlined, size: 22),
-                      onPressed: () => context.go('/certificates'),
-                    ),
-                    const SizedBox(width: 4),
-                    TextButton.icon(
-                      onPressed: () => context.go('/account/orders'),
-                      icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                      label: const Text('Đơn hàng'),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceVariant,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.person_outline,
-                              size: 16, color: AppTheme.primary),
-                          const SizedBox(width: 6),
-                          Text(
-                            user.fullName,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: () => ref.read(authProvider.notifier).logout(),
-                      child: const Text('Đăng xuất'),
-                    ),
-                  ] else ...[
-                    OutlinedButton(
-                      onPressed: () => context.go('/login'),
-                      child: const Text('Đăng nhập'),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: () => context.go('/register'),
-                      child: const Text('Đăng ký'),
-                    ),
-                  ],
-                ] else ...[
-                  const Spacer(),
                   IconButton(
                     icon: Icon(_menuOpen ? Icons.close : Icons.menu),
                     onPressed: () => setState(() => _menuOpen = !_menuOpen),
@@ -215,7 +271,7 @@ class _NavbarState extends ConsumerState<_Navbar> {
           ),
 
           // Mobile dropdown menu
-          if (isMobile && _menuOpen)
+          if (isCompact && _menuOpen)
             Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -223,6 +279,7 @@ class _NavbarState extends ConsumerState<_Navbar> {
                 children: [
                   _MobileNavLink(label: 'Trang chủ', path: '/'),
                   _MobileNavLink(label: 'Khóa học', path: '/khoa-hoc'),
+                  _MobileNavLink(label: 'Yêu thích', path: '/wishlist'),
                   _MobileNavLink(label: 'Giỏ hàng', path: '/cart'),
                   if (isLoggedIn) ...[
                     _MobileNavLink(
@@ -231,6 +288,9 @@ class _NavbarState extends ConsumerState<_Navbar> {
                         label: 'Chứng chỉ của tôi', path: '/certificates'),
                     _MobileNavLink(
                         label: 'Đơn hàng của tôi', path: '/account/orders'),
+                    if (user.isAdmin)
+                      _MobileNavLink(
+                          label: 'Khu vực quản trị (Admin)', path: '/admin'),
                     const SizedBox(height: 8),
                     const Divider(),
                     ListTile(

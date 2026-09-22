@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Prompt 14 backend complete; Flutter wishlist/review/coupon/admin UI remains pending.
-- Current task: Wishlist, reviews/moderation, and coupon/promotion backend integrated with checkout and verified.
-- Last completed task: Prompt 14 backend: authenticated wishlist CRUD, entitlement-gated review submission and admin moderation, server-authoritative coupon validation and atomic coupon usage during checkout. `npm test` passed 19/19; `npx prisma validate` and `npx prisma migrate status` passed; `/api/health` returned HTTP 200.
+- Current phase: Prompt 15 Flutter UI for Advanced Features & Admin Dashboard COMPLETE and verified.
+- Current task: Wishlist UI, Review submission/status UI, Coupon Cart/Checkout UI, Recommendations UI, Admin Dashboard, and 9 Admin Management screens verified.
+- Last completed task: Prompt 15 full scope: Wishlist Flutter UI, Review submission & moderation UI, Coupon application with backend calculation, Course recommendations, Protected Admin Dashboard, 9 Admin sub-screens (Courses, Categories, Orders, Users, Reviews, Coupons, Entitlements, Reports), route guards with 403 Forbidden denial for customers, and responsive states across desktop/tablet/mobile. Verified with `flutter analyze` (0 issues), `flutter test` (18/18 passed), `flutter build web` (passed), `npm test` (19/19 passed), `npx prisma validate` (passed), and complete real browser end-to-end testing.
 - Blocking issues: None.
-- Next recommended task: Proceed to Prompt 15 Flutter Wishlist/Review/Coupon/Admin UI only; do not change the verified Prompt 14 backend unnecessarily.
+- Next recommended task: Proceed to Prompt 16 (Security Audit, IDOR, SQL injection, XSS, CSRF, rate limiting, and database backup verification).
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -17,7 +17,7 @@
 | 5. Flutter Core UI | DONE | AppShell, responsive breakpoints, theming, navigation, and core states built |
 | 6. Flutter Course Catalog | DONE | Home, catalog, detail pages built with real API data and responsive layouts |
 | 7. Cart | DONE | Backend Cart API and Flutter Cart page complete; add to cart and cart sync verified |
-| 8. Coupons | IN PROGRESS | Backend promotion validation and checkout integration verified; Flutter coupon UI remains for Prompt 15 |
+| 8. Coupons | DONE | Backend promotion validation, checkout integration, and Flutter coupon UI with backend calculations verified |
 | 9. Checkout and Orders | IN PROGRESS | COD checkout and customer order APIs/UI verified; VNPay backend is verified while Flutter payment UI remains pending |
 | 10. VNPay Sandbox | DONE | Signed Sandbox create, return, IPN, amount/reference/signature checks, idempotency, audit logs, docs, and tests verified |
 | 11. Digital Course Entitlement | DONE | COD/VNPay grants, admin grant/revoke/restore, ACTIVE/REVOKED enforcement, protected APIs, audit logs, and tests verified |
@@ -25,9 +25,9 @@
 | 13. Secure Downloads | DONE | Private admin upload, entitlement-protected hashed temporary tokens, single-use streaming, Flutter download action with expiry guidance, error handling & browser verified |
 | 14. Course Progress | IN PROGRESS | Required-lesson calculation is returned by lesson completion and verified; standalone progress API and Flutter UI remain |
 | 15. Certificates | DONE | Unique automatic issuance, private PDF generation, public verification, Flutter list/detail/verification screens, PDF download, celebration modal, tests & browser verified |
-| 16. Wishlist | IN PROGRESS | Authenticated backend CRUD and tests verified; Flutter wishlist UI remains for Prompt 15 |
-| 17. Reviews | IN PROGRESS | Entitlement-gated review/moderation backend and tests verified; Flutter review UI remains for Prompt 15 |
-| 18. Admin Panel | NOT STARTED | |
+| 16. Wishlist | DONE | Authenticated backend CRUD, Flutter wishlist UI, add/remove, course card heart toggle, and browser flow verified |
+| 17. Reviews | DONE | Entitlement-gated review backend, customer review submission with PENDING/APPROVED status, public review list, and browser flow verified |
+| 18. Admin Panel | DONE | Protected admin shell, dashboard KPI cards, review moderation, entitlement management, 9 management screens, customer 403 denial, and browser flow verified |
 | 19. Security Audit | NOT STARTED | |
 | 20. SEO | NOT STARTED | |
 | 21. Testing | NOT STARTED | |
@@ -244,7 +244,7 @@
 - [x] add wishlist
 - [x] remove wishlist
 - [x] duplicate prevention
-- [ ] wishlist page
+- [x] wishlist page
 - [x] tests
 
 ## 17. Reviews
@@ -256,26 +256,26 @@
 - [x] REJECTED
 - [x] admin moderation
 - [x] approved rating aggregation
-- [ ] Flutter review UI
+- [x] Flutter review UI
 - [x] tests
 
 ## 18. Admin Panel
-- [ ] admin shell
-- [ ] dashboard
-- [ ] course management
-- [ ] category management
-- [ ] order management
-- [ ] user management
-- [ ] COD confirmation
-- [ ] review moderation
-- [ ] coupon management
-- [ ] entitlement management
-- [ ] revenue report
-- [ ] recent orders
-- [ ] best-selling courses
-- [ ] monthly revenue
-- [ ] responsive admin UI
-- [ ] browser tests
+- [x] admin shell
+- [x] dashboard
+- [x] course management
+- [x] category management
+- [x] order management
+- [x] user management
+- [x] COD confirmation
+- [x] review moderation
+- [x] coupon management
+- [x] entitlement management
+- [x] revenue report
+- [x] recent orders
+- [x] best-selling courses
+- [x] monthly revenue
+- [x] responsive admin UI
+- [x] browser tests
 
 ## 19. Security Audit
 - [ ] authentication review

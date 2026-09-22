@@ -27,4 +27,14 @@ router.get('/courses/:courseId/reviews', async (req, res, next) => {
   } catch (error) { return next(error); }
 });
 
+router.get('/courses/:courseId/my-review', requireAuth, requireCustomer, async (req, res, next) => {
+  try {
+    const review = await prisma.review.findUnique({
+      where: { userId_courseId: { userId: req.user.id, courseId: req.params.courseId } },
+      select: { id: true, rating: true, comment: true, status: true, moderatedAt: true, createdAt: true },
+    });
+    return res.json({ success: true, data: { review } });
+  } catch (error) { return next(error); }
+});
+
 module.exports = router;

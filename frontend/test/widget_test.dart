@@ -27,6 +27,18 @@ import 'package:edumarket/features/certificates/providers/certificate_provider.d
 import 'package:edumarket/features/certificates/certificate_list_screen.dart';
 import 'package:edumarket/features/certificates/certificate_verification_screen.dart';
 
+import 'package:edumarket/features/wishlist/models/wishlist_model.dart';
+import 'package:edumarket/features/wishlist/providers/wishlist_provider.dart';
+import 'package:edumarket/features/wishlist/wishlist_screen.dart';
+import 'package:edumarket/features/reviews/models/review_models.dart';
+import 'package:edumarket/features/reviews/providers/review_provider.dart';
+import 'package:edumarket/features/reviews/widgets/course_reviews_section.dart';
+import 'package:edumarket/features/cart/models/coupon_model.dart';
+import 'package:edumarket/features/cart/providers/coupon_provider.dart';
+import 'package:edumarket/features/cart/widgets/coupon_input_card.dart';
+import 'package:edumarket/features/admin/models/admin_models.dart';
+import 'package:edumarket/features/admin/providers/admin_provider.dart';
+
 // ── Fake Repositories ────────────────────────────────────────────────────────
 
 class FakeAuthRepository implements AuthRepository {
@@ -111,7 +123,7 @@ class FakeCartRepository implements CartRepository {
 
 class FakeOrderRepository implements OrderRepository {
   @override
-  Future<OrderModel> checkoutCod() async {
+  Future<OrderModel> checkoutCod({String? couponCode}) async {
     return OrderModel(
       id: 'ord-123',
       orderNumber: 'ORD-123',
@@ -175,12 +187,211 @@ class FakeCertificateRepository implements CertificateRepository {
       [37, 80, 68, 70, 45]; // %PDF-
 }
 
+class FakeWishlistRepository implements WishlistRepository {
+  FakeWishlistRepository({List<WishlistItemModel>? initialItems})
+      : items = List.of(initialItems ?? []);
+  final List<WishlistItemModel> items;
+
+  @override
+  Future<List<WishlistItemModel>> getWishlist() async => List.of(items);
+
+  @override
+  Future<WishlistItemModel> addToWishlist(String courseId) async {
+    final newItem = WishlistItemModel(
+      id: 'fav-$courseId',
+      userId: 'test-user-id',
+      courseId: courseId,
+      createdAt: DateTime.now(),
+      course: CourseModel(
+        id: courseId,
+        title: 'Khóa học $courseId',
+        slug: 'khoa-hoc-$courseId',
+        instructorName: 'Giảng viên Test',
+        price: 299000,
+        salePrice: 199000,
+        ratingAverage: 4.8,
+        ratingCount: 10,
+        enrollmentCount: 50,
+        level: 'ALL_LEVELS',
+        shortDescription: 'Mô tả khóa học kiểm thử',
+        category: const CategoryModel(id: 'cat-1', name: 'Lập trình', slug: 'lap-trinh'),
+      ),
+    );
+    items.add(newItem);
+    return newItem;
+  }
+
+  @override
+  Future<void> removeFromWishlist(String courseId) async {
+    items.removeWhere((it) => it.courseId == courseId || it.course.id == courseId);
+  }
+}
+
+class FakeReviewRepository implements ReviewRepository {
+  FakeReviewRepository({
+    this.reviews = const [],
+    this.myReview,
+  });
+  final List<ReviewItemModel> reviews;
+  MyReviewModel? myReview;
+
+  @override
+  Future<List<ReviewItemModel>> getCourseReviews(String courseId) async => reviews;
+
+  @override
+  Future<MyReviewModel?> getMyReview(String courseId) async => myReview;
+
+  @override
+  Future<MyReviewModel> submitReview({
+    required String courseId,
+    required int rating,
+    String? comment,
+  }) async {
+    final submitted = MyReviewModel(
+      id: 'rev-new',
+      rating: rating,
+      comment: comment,
+      status: 'PENDING',
+      createdAt: DateTime.now(),
+    );
+    myReview = submitted;
+    return submitted;
+  }
+}
+
+class FakeCouponRepository implements CouponRepository {
+  @override
+  Future<ValidatedCouponModel> validateCoupon(String couponCode) async {
+    if (couponCode.toUpperCase() == 'GIAM10') {
+      return const ValidatedCouponModel(
+        code: 'GIAM10',
+        discountType: 'PERCENTAGE',
+        subtotal: 500000,
+        discountAmount: 50000,
+        totalAmount: 450000,
+      );
+    }
+    throw DioException(
+      requestOptions: RequestOptions(path: '/api/coupons/validate'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/api/coupons/validate'),
+        statusCode: 400,
+        data: {'message': 'Mã giảm giá không hợp lệ hoặc đã hết hạn.'},
+      ),
+    );
+  }
+}
+
+class FakeAdminRepository implements AdminRepository {
+  FakeAdminRepository({this.dashboardMetrics});
+  final AdminDashboardMetrics? dashboardMetrics;
+
+  @override
+  Future<AdminDashboardMetrics> getDashboard() async {
+    return dashboardMetrics ??
+        const AdminDashboardMetrics(
+          totalRevenue: 15000000,
+          orderCount: 42,
+          customerCount: 15,
+          courseCount: 6,
+          recentOrders: [],
+          bestSellingCourses: [],
+          monthlyRevenue: [],
+        );
+  }
+
+  @override
+  Future<AdminRevenueReportModel> getRevenueReport() async {
+    return const AdminRevenueReportModel(
+      totalRevenue: 15000000,
+      totalDiscount: 500000,
+      totalSubtotal: 15500000,
+      paidOrdersCount: 42,
+      codRevenue: 5000000,
+      codCount: 15,
+      vnpayRevenue: 10000000,
+      vnpayCount: 27,
+    );
+  }
+
+  @override
+  Future<List<AdminOrderModel>> getOrders({String? status}) async => [];
+
+  @override
+  Future<void> confirmCodOrder(String orderId) async {}
+
+  @override
+  Future<List<AdminUserModel>> getUsers({String? role, String? q}) async => [];
+
+  @override
+  Future<List<AdminReviewModel>> getReviews({String? status}) async => [];
+
+  @override
+  Future<void> moderateReview(String reviewId, String status) async {}
+
+  @override
+  Future<List<AdminCouponModel>> getCoupons() async => [];
+
+  @override
+  Future<AdminCouponModel> createCoupon(Map<String, dynamic> data) async {
+    return AdminCouponModel(
+      id: 'cpn-1',
+      code: data['code'] as String? ?? 'TEST',
+      discountType: data['discountType'] as String? ?? 'PERCENTAGE',
+      discountValue: 10,
+      usageCount: 0,
+      perUserLimit: 1,
+      startsAt: DateTime.now(),
+      endsAt: DateTime.now().add(const Duration(days: 30)),
+      isActive: true,
+    );
+  }
+
+  @override
+  Future<void> toggleCouponActive(String id, bool isActive) async {}
+
+  @override
+  Future<List<AdminEntitlementModel>> getEntitlements({String? status}) async => [];
+
+  @override
+  Future<void> revokeEntitlement(String id, String reason) async {}
+
+  @override
+  Future<void> grantEntitlement({
+    required String userId,
+    required String courseId,
+    required String orderId,
+  }) async {}
+
+  @override
+  Future<List<CategoryModel>> getCategories() async => [];
+
+  @override
+  Future<void> createCategory(Map<String, dynamic> data) async {}
+
+  @override
+  Future<void> deleteCategory(String id) async {}
+
+  @override
+  Future<List<CourseModel>> getCourses() async => [];
+
+  @override
+  Future<void> updateCourseStatus(String courseId, String status) async {}
+
+  @override
+  Future<void> deleteCourse(String courseId) async {}
+}
+
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 void main() {
   ProviderContainer createContainer({
     UserModel? loggedInUser,
     List<CertificateItem> certificates = const [],
+    List<WishlistItemModel> wishlistItems = const [],
+    List<ReviewItemModel> courseReviews = const [],
+    MyReviewModel? myReview,
+    AdminDashboardMetrics? adminDashboard,
   }) {
     return ProviderContainer(
       overrides: [
@@ -202,12 +413,22 @@ void main() {
         certificateRepositoryProvider.overrideWithValue(
           FakeCertificateRepository(certificates: certificates),
         ),
+        wishlistRepositoryProvider.overrideWithValue(
+          FakeWishlistRepository(initialItems: wishlistItems),
+        ),
+        reviewRepositoryProvider.overrideWithValue(
+          FakeReviewRepository(reviews: courseReviews, myReview: myReview),
+        ),
+        couponRepositoryProvider.overrideWithValue(FakeCouponRepository()),
+        adminRepositoryProvider.overrideWithValue(
+          FakeAdminRepository(dashboardMetrics: adminDashboard),
+        ),
       ],
     );
   }
 
   void setupDesktopViewport(WidgetTester tester) {
-    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.physicalSize = const Size(1440, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -496,5 +717,220 @@ void main() {
     expect(find.text('CHỨNG CHỈ HỢP LỆ VÀ CHÍNH THỨC'), findsOneWidget);
     expect(find.text('Vũ Hoàng'), findsOneWidget);
     expect(find.text('Node.js và Express cho người mới'), findsOneWidget);
+  });
+
+  testWidgets('WishlistScreen renders empty state when wishlist is empty', (WidgetTester tester) async {
+    final container = createContainer();
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: WishlistScreen(),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Danh sách yêu thích trống'), findsOneWidget);
+    expect(find.text('Khám phá khóa học ngay'), findsOneWidget);
+  });
+
+  testWidgets('WishlistScreen renders items and allows removing course from wishlist', (WidgetTester tester) async {
+    final sampleItem = WishlistItemModel(
+      id: 'wish-1',
+      userId: 'test-user-id',
+      courseId: 'course-1',
+      createdAt: DateTime.now(),
+      course: const CourseModel(
+        id: 'course-1',
+        title: 'Khóa học Flutter Masterclass',
+        slug: 'khoa-hoc-flutter-masterclass',
+        instructorName: 'Nguyễn Văn Flutter',
+        price: 299000,
+        salePrice: 199000,
+        ratingAverage: 4.9,
+        ratingCount: 25,
+        enrollmentCount: 120,
+        level: 'ALL_LEVELS',
+        shortDescription: 'Khóa học lập trình Flutter đỉnh cao',
+        category: CategoryModel(id: 'cat-1', name: 'Lập trình', slug: 'lap-trinh'),
+      ),
+    );
+    final container = createContainer(wishlistItems: [sampleItem]);
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: WishlistScreen(),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Khóa học Flutter Masterclass'), findsWidgets);
+    final removeBtn = find.byTooltip('Bỏ khỏi yêu thích');
+    expect(removeBtn, findsOneWidget);
+
+    // Tap delete button to remove
+    await tester.tap(removeBtn);
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Danh sách yêu thích trống'), findsOneWidget);
+  });
+
+  testWidgets('CourseReviewsSection displays review status and rating summary', (WidgetTester tester) async {
+    const customer = UserModel(
+      id: 'c1',
+      email: 'customer@example.com',
+      fullName: 'Vũ Hoàng',
+      role: 'CUSTOMER',
+    );
+    final pendingReview = MyReviewModel(
+      id: 'rev-1',
+      rating: 5,
+      comment: 'Khóa học rất hay và chi tiết!',
+      status: 'PENDING',
+      createdAt: DateTime.now(),
+    );
+    final container = createContainer(
+      loggedInUser: customer,
+      myReview: pendingReview,
+    );
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: CourseReviewsSection(
+                courseId: 'course-1',
+                ratingAverage: 5.0,
+                ratingCount: 1,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Đánh giá từ học viên'), findsOneWidget);
+    expect(find.text('Đang chờ kiểm duyệt'), findsOneWidget);
+    expect(find.text('Đánh giá của bạn'), findsOneWidget);
+    expect(find.text('Khóa học rất hay và chi tiết!'), findsOneWidget);
+  });
+
+  testWidgets('CouponInputCard validates coupon and displays discount', (WidgetTester tester) async {
+    final container = createContainer();
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: Scaffold(
+            body: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CouponInputCard(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Nhập mã giảm giá'), findsOneWidget);
+    expect(find.text('Áp dụng'), findsOneWidget);
+
+    final inputFinder = find.byType(TextField);
+    await tester.enterText(inputFinder, 'GIAM10');
+    await tester.tap(find.text('Áp dụng'));
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Mã giảm giá: GIAM10'), findsOneWidget);
+    expect(find.text('Giảm 50.000₫'), findsOneWidget);
+
+    // Tap remove button
+    final removeBtn = find.byTooltip('Gỡ bỏ mã');
+    expect(removeBtn, findsOneWidget);
+    await tester.tap(removeBtn);
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Nhập mã giảm giá'), findsOneWidget);
+  });
+
+  testWidgets('Admin route /admin redirects CUSTOMER role to /admin/forbidden', (WidgetTester tester) async {
+    const customer = UserModel(
+      id: 'c1',
+      email: 'customer@example.com',
+      fullName: 'Vũ Hoàng',
+      role: 'CUSTOMER',
+    );
+    final container = createContainer(loggedInUser: customer);
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: Consumer(
+          builder: (context, ref, _) {
+            return MaterialApp.router(
+              theme: AppTheme.light,
+              routerConfig: ref.watch(routerProvider),
+            );
+          },
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    container.read(routerProvider).go('/admin');
+    await pumpUntilResolved(tester);
+
+    expect(find.text('403 - Quyền truy cập bị từ chối'), findsOneWidget);
+  });
+
+  testWidgets('Admin route /admin renders AdminDashboardScreen for ADMIN role', (WidgetTester tester) async {
+    const admin = UserModel(
+      id: 'a1',
+      email: 'admin@example.com',
+      fullName: 'Quản Trị Viên',
+      role: 'ADMIN',
+    );
+    final container = createContainer(loggedInUser: admin);
+    addTearDown(container.dispose);
+    setupDesktopViewport(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: Consumer(
+          builder: (context, ref, _) {
+            return MaterialApp.router(
+              theme: AppTheme.light,
+              routerConfig: ref.watch(routerProvider),
+            );
+          },
+        ),
+      ),
+    );
+    await pumpUntilResolved(tester);
+
+    container.read(routerProvider).go('/admin');
+    await pumpUntilResolved(tester);
+
+    expect(find.text('Bảng điều khiển quản trị'), findsOneWidget);
+    expect(find.text('Tổng doanh thu'), findsOneWidget);
   });
 }

@@ -18,6 +18,17 @@ import '../../features/library/lesson_player_screen.dart';
 import '../../features/certificates/certificate_list_screen.dart';
 import '../../features/certificates/certificate_detail_screen.dart';
 import '../../features/certificates/certificate_verification_screen.dart';
+import '../../features/wishlist/wishlist_screen.dart';
+import '../../features/admin/admin_dashboard_screen.dart';
+import '../../features/admin/admin_courses_screen.dart';
+import '../../features/admin/admin_categories_screen.dart';
+import '../../features/admin/admin_orders_screen.dart';
+import '../../features/admin/admin_users_screen.dart';
+import '../../features/admin/admin_reviews_screen.dart';
+import '../../features/admin/admin_coupons_screen.dart';
+import '../../features/admin/admin_entitlements_screen.dart';
+import '../../features/admin/admin_reports_screen.dart';
+import '../widgets/forbidden_screen.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 
@@ -39,7 +50,11 @@ class RouterNotifier extends ChangeNotifier {
         location.startsWith('/checkout') ||
         location.startsWith('/account') ||
         location.startsWith('/library') ||
-        location == '/certificates';
+        location == '/certificates' ||
+        location.startsWith('/wishlist');
+
+    final isAdminRoute =
+        location.startsWith('/admin') && location != '/admin/forbidden';
 
     final isAuthRoute = location == '/login' || location == '/register';
 
@@ -48,10 +63,18 @@ class RouterNotifier extends ChangeNotifier {
       return null;
     }
 
-    // Unauthenticated user attempting to access a protected route
-    if (authState.status == AuthStatus.unauthenticated && isProtected) {
+    // Unauthenticated user attempting to access a protected customer or admin route
+    if (authState.status == AuthStatus.unauthenticated &&
+        (isProtected || isAdminRoute)) {
       final target = state.uri.toString();
       return '/login?redirect=${Uri.encodeComponent(target)}';
+    }
+
+    // Authenticated non-admin attempting to access admin route
+    if (authState.status == AuthStatus.authenticated && isAdminRoute) {
+      if (authState.user?.role != 'ADMIN') {
+        return '/admin/forbidden';
+      }
     }
 
     // Authenticated user attempting to access login or register
@@ -194,6 +217,64 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => CertificateDetailScreen(
           code: state.pathParameters['code']!,
         ),
+      ),
+      // ── Wishlist ────────────────────────────────────────────────────────────
+      GoRoute(
+        path: '/wishlist',
+        name: 'wishlist',
+        builder: (context, _) => const WishlistScreen(),
+      ),
+
+      // ── Admin routes ────────────────────────────────────────────────────────
+      GoRoute(
+        path: '/admin',
+        name: 'adminDashboard',
+        builder: (context, _) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/courses',
+        name: 'adminCourses',
+        builder: (context, _) => const AdminCoursesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/categories',
+        name: 'adminCategories',
+        builder: (context, _) => const AdminCategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/orders',
+        name: 'adminOrders',
+        builder: (context, _) => const AdminOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/users',
+        name: 'adminUsers',
+        builder: (context, _) => const AdminUsersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/reviews',
+        name: 'adminReviews',
+        builder: (context, _) => const AdminReviewsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/coupons',
+        name: 'adminCoupons',
+        builder: (context, _) => const AdminCouponsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/entitlements',
+        name: 'adminEntitlements',
+        builder: (context, _) => const AdminEntitlementsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/reports',
+        name: 'adminReports',
+        builder: (context, _) => const AdminReportsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/forbidden',
+        name: 'adminForbidden',
+        builder: (context, _) => const ForbiddenScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
