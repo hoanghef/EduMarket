@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /khoa-hoc
+Allow: /khoa-hoc/*
+Allow: /danh-muc/*
+Allow: /certificates/verify
+Allow: /certificates/verify/*
+Allow: /chinh-sach/*
+Allow: /khuyen-mai
+
+# Disallow private and authenticated user routes
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /account
+Disallow: /account/*
+Disallow: /cart
+Disallow: /checkout
+Disallow: /library
+Disallow: /library/*
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+
+Sitemap: http://localhost:4000/sitemap.xml

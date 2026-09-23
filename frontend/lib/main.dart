@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
 void main() {
-  // Use path-based URL strategy (no hash in URLs, required by PROJECT_CONTEXT §22).
-  // For Flutter Web, this is done via the web/index.html base href
-  // and go_router's default path strategy.
+  usePathUrlStrategy();
   runApp(
     // Wrap in ProviderScope so all Riverpod providers are available.
     const ProviderScope(

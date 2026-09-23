@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/seo/seo_data.dart';
+import '../../../core/seo/seo_helper.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_shell.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -33,6 +35,8 @@ class AdminShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SeoHelper.apply(SeoData.private(title: '$title | Quản trị EduMarket'));
+
     final width = MediaQuery.of(context).size.width;
     final isDesktop = width >= Breakpoint.desktop;
     final authUser = ref.watch(authProvider).user;

@@ -18,6 +18,8 @@ import '../../features/library/lesson_player_screen.dart';
 import '../../features/certificates/certificate_list_screen.dart';
 import '../../features/certificates/certificate_detail_screen.dart';
 import '../../features/certificates/certificate_verification_screen.dart';
+import '../../features/policies/policy_screen.dart';
+import '../../features/promotions/promotions_screen.dart';
 import '../../features/wishlist/wishlist_screen.dart';
 import '../../features/admin/admin_dashboard_screen.dart';
 import '../../features/admin/admin_courses_screen.dart';
@@ -223,6 +225,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/wishlist',
         name: 'wishlist',
         builder: (context, _) => const WishlistScreen(),
+      ),
+
+      // ── Policy & Seller routes ──────────────────────────────────────────────
+      GoRoute(
+        path: '/chinh-sach',
+        redirect: (_, state) => '/chinh-sach/business',
+      ),
+      GoRoute(
+        path: '/chinh-sach/:slug',
+        name: 'policy',
+        builder: (context, state) => PolicyScreen(
+          slug: state.pathParameters['slug'] ?? 'business',
+        ),
+      ),
+
+      // ── Marketing & Promotions ──────────────────────────────────────────────
+      GoRoute(
+        path: '/khuyen-mai',
+        name: 'promotions',
+        builder: (context, _) => const PromotionsScreen(),
       ),
 
       // ── Admin routes ────────────────────────────────────────────────────────

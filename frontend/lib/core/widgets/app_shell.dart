@@ -525,6 +525,19 @@ class _FooterDesktop extends StatelessWidget {
                   ('Tất cả khóa học', '/khoa-hoc'),
                   ('Lập trình', '/danh-muc/lap-trinh'),
                   ('Thiết kế', '/danh-muc/thiet-ke'),
+                  ('Ưu đãi & Khuyến mãi', '/khuyen-mai'),
+                ],
+              ),
+            ),
+            const SizedBox(width: 32),
+            Expanded(
+              child: _FooterColumn(
+                title: 'Chính sách & Quy định',
+                links: const [
+                  ('Thông tin người bán', '/chinh-sach/business'),
+                  ('Điều khoản giao dịch', '/chinh-sach/terms'),
+                  ('Chính sách hoàn tiền', '/chinh-sach/refunds'),
+                  ('Bảo vệ dữ liệu cá nhân', '/chinh-sach/privacy'),
                 ],
               ),
             ),
@@ -571,7 +584,43 @@ class _FooterMobile extends StatelessWidget {
           style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.6),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => context.go('/khoa-hoc'),
+              child: const Text('Khóa học', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/khuyen-mai'),
+              child: const Text('Khuyến mãi', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/chinh-sach/business'),
+              child: const Text('Người bán', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/chinh-sach/terms'),
+              child: const Text('Điều khoản', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/chinh-sach/refunds'),
+              child: const Text('Hoàn tiền', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/chinh-sach/privacy'),
+              child: const Text('Bảo mật', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/certificates/verify'),
+              child: const Text('Xác thực chứng chỉ', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
         const Divider(color: Color(0xFF334155)),
         const SizedBox(height: 12),
         const Text(

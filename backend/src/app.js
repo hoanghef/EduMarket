@@ -77,7 +77,12 @@ const wishlistRouter = require('./routes/wishlist');
 const reviewsRouter = require('./routes/reviews');
 const couponsRouter = require('./routes/coupons');
 const adminRouter = require('./routes/admin');
+const seoRouter = require('./routes/seo');
 const { csrfProtection } = require('./lib/auth');
+
+// Public SEO files (sitemap.xml, robots.txt)
+app.use('/', seoRouter);
+
 app.use('/api', healthRouter);
 app.use('/api', csrfProtection);
 app.use('/api/auth', authRouter);

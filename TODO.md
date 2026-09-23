@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Prompt 16 Security Audit and Hardening COMPLETE and verified.
-- Current task: Security audit, minimal hardening, policy content, dependency remediation, and backup/restore documentation completed.
-- Last completed task: Prompt 16: session invalidation on logout, production cookie/CORS hardening, sensitive-action limits, upload signature validation, policy APIs, backup/restore scripts and security documentation. Verified with `npm test` (24/24 passed), `npm audit` (0 vulnerabilities), `npx prisma validate`, `npx prisma migrate status` (3 migrations, up to date), `/api/health` (HTTP 200), secret scan, and `git diff --check`.
-- Blocking issues: No code blocker. A real PostgreSQL archive/restore drill remains a production readiness review item because `pg_dump` and `pg_restore` are unavailable in this workspace.
-- Next recommended task: Proceed to Prompt 17 SEO only.
+- Current phase: Prompt 17 Technical SEO and Public Policy/Marketing Pages COMPLETE and verified.
+- Current task: URL routing SEO, dynamic titles/meta descriptions, canonical URLs, OpenGraph, JSON-LD structured data (Course, Product, BreadcrumbList), dynamic sitemap.xml, robots.txt, public policy/seller pages, homepage promotion section, dedicated promotions page, and docs/seo.md completed.
+- Last completed task: Prompt 17: flutter web path URL strategy, dynamic DOM metadata/JSON-LD, backend GET /sitemap.xml (excluding private routes), backend and static GET /robots.txt, public policy UI (/chinh-sach/:slug), promotions page (/khuyen-mai) and homepage promotions banner, docs/seo.md. Verified with `flutter analyze` (0 issues), `flutter test` (18/18 passed), `flutter build web` (success), `npm test` (26/26 passed), `npx prisma validate` (valid), live curl tests for sitemap.xml/robots.txt, and live browser navigation.
+- Blocking issues: None.
+- Next recommended task: Proceed to Prompt 18 (Test cases documentation & automated testing) only.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -29,7 +29,7 @@
 | 17. Reviews | DONE | Entitlement-gated review backend, customer review submission with PENDING/APPROVED status, public review list, and browser flow verified |
 | 18. Admin Panel | DONE | Protected admin shell, dashboard KPI cards, review moderation, entitlement management, 9 management screens, customer 403 denial, and browser flow verified |
 | 19. Security Audit | DONE | Backend/Flutter integration audit, session invalidation, production CORS/cookie hardening, upload signature checks, policies, dependency remediation, documentation, and 24 backend tests verified; live restore drill remains documented NEEDS REVIEW |
-| 20. SEO | NOT STARTED | |
+| 20. SEO | DONE | Non-hash path URLs, dynamic title/meta/canonical/OG/JSON-LD, dynamic sitemap.xml, robots.txt, policy & promotion pages, docs/seo.md verified |
 | 21. Testing | NOT STARTED | |
 | 22. Final Browser Verification | NOT STARTED | |
 | 23. Documentation and Submission | NOT STARTED | |
@@ -299,20 +299,20 @@
 - [x] security checklist documentation
 
 ## 20. SEO
-- [ ] path-based URLs
-- [ ] course slug
-- [ ] title
-- [ ] meta description
-- [ ] canonical
-- [ ] OpenGraph
-- [ ] Course structured data
-- [ ] Product structured data
-- [ ] BreadcrumbList
-- [ ] sitemap.xml
-- [ ] robots.txt
-- [ ] excluded private routes
-- [ ] SEO documentation
-- [ ] verification
+- [x] path-based URLs
+- [x] course slug
+- [x] title
+- [x] meta description
+- [x] canonical
+- [x] OpenGraph
+- [x] Course structured data
+- [x] Product structured data
+- [x] BreadcrumbList
+- [x] sitemap.xml
+- [x] robots.txt
+- [x] excluded private routes
+- [x] SEO documentation
+- [x] verification
 
 ## 21. Testing
 - [ ] minimum 35 documented test cases

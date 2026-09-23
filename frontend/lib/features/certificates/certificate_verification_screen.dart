@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../core/seo/seo_data.dart';
+import '../../core/seo/seo_helper.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import 'models/certificate_models.dart';
@@ -102,6 +104,10 @@ class _CertificateVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
+    SeoHelper.apply(
+      SeoData.certificateVerification(code: widget.initialCode),
+    );
+
     return AppShell(
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

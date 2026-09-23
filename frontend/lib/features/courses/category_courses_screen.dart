@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/seo/seo_data.dart';
+import '../../core/seo/seo_helper.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/async_states.dart';
@@ -30,6 +32,12 @@ class CategoryCoursesScreen extends ConsumerWidget {
       },
       orElse: () => null,
     );
+
+    if (category != null) {
+      SeoHelper.apply(SeoData.category(name: category.name, slug: category.slug));
+    } else {
+      SeoHelper.apply(SeoData.catalog(categoryName: slug));
+    }
 
     // Set catalog filter for this category
     final filter = CatalogFilter(category: slug, page: 1);

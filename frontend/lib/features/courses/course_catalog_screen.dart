@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/seo/seo_data.dart';
+import '../../core/seo/seo_helper.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/async_states.dart';
@@ -58,6 +60,14 @@ class _CourseCatalogScreenState
   Widget build(BuildContext context) {
     final filter = ref.watch(catalogFilterProvider);
     final asyncCourses = ref.watch(coursesProvider);
+
+    SeoHelper.apply(
+      SeoData.catalog(
+        query: filter.q,
+        categoryName: filter.category,
+        sort: filter.sort,
+      ),
+    );
     final asyncCats = ref.watch(categoriesProvider);
     final isMobile = Breakpoint.isMobile(context);
     final cols = Breakpoint.gridColumns(context);

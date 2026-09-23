@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../seo/seo_data.dart';
+import '../seo/seo_helper.dart';
 import '../theme/app_theme.dart';
 
 class ForbiddenScreen extends ConsumerWidget {
@@ -9,6 +11,8 @@ class ForbiddenScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SeoHelper.apply(SeoData.private(title: 'Truy cập bị từ chối (403)'));
+
     return Scaffold(
       backgroundColor: AppTheme.surface,
       body: Center(

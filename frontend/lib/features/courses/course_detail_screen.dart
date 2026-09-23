@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/seo/seo_data.dart';
+import '../../core/seo/seo_helper.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/async_states.dart';
@@ -23,10 +25,39 @@ class CourseDetailScreen extends ConsumerWidget {
     final asyncCourse = ref.watch(courseDetailProvider(slug));
     return AppShell(
       child: asyncCourse.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(courseDetailProvider(slug)),
+        loading: () => const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 64),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        error: (err, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 64),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 48, color: AppTheme.error),
+                const SizedBox(height: 16),
+                Text(
+                  'Không tìm thấy khóa học',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  err.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppTheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => ref.refresh(courseDetailProvider(slug)),
+                  child: const Text('Thử lại'),
+                ),
+              ],
+            ),
+          ),
         ),
         data: (course) => _CourseDetailBody(course: course),
       ),
@@ -41,6 +72,7 @@ class _CourseDetailBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SeoHelper.apply(SeoData.course(course: course));
     final asyncRecs = ref.watch(recommendationsProvider(course.id));
     final isMobile = Breakpoint.isMobile(context);
 

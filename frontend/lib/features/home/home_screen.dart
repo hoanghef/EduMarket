@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/seo/seo_data.dart';
+import '../../core/seo/seo_helper.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/async_states.dart';
@@ -13,6 +15,8 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SeoHelper.apply(SeoData.home());
+
     return AppShell(
       child: SingleChildScrollView(
         child: Column(
@@ -23,6 +27,9 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 48),
             // ── Categories ────────────────────────────────────────────────────
             _CategoriesSection(ref: ref),
+            const SizedBox(height: 48),
+            // ── Marketing Promotion Highlight ─────────────────────────────────
+            const _MarketingPromotionsSection(),
             const SizedBox(height: 48),
             // ── Best Sellers ──────────────────────────────────────────────────
             _CourseSection(
@@ -46,6 +53,130 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 64),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MarketingPromotionsSection extends StatelessWidget {
+  const _MarketingPromotionsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Breakpoint.isMobile(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: Breakpoint.pagePadding(context)),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+          child: Container(
+            padding: EdgeInsets.all(isMobile ? 20 : 32),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'ƯU ĐÃI THÀNH VIÊN',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Tiết kiệm đến 20% với các mã giảm giá học tập',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Áp dụng mã WELCOME10, HOC500K hoặc STUDENT20 trực tiếp khi thanh toán.',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () => context.go('/khuyen-mai'),
+                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        label: const Text('Xem mã giảm giá'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1E1B4B),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF59E0B),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'ƯU ĐÃI THÀNH VIÊN',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Tiết kiệm đến 20% với các mã giảm giá học tập',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Áp dụng mã WELCOME10, HOC500K hoặc STUDENT20 trực tiếp khi thanh toán.',
+                              style: TextStyle(color: Colors.white70, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      FilledButton.icon(
+                        onPressed: () => context.go('/khuyen-mai'),
+                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        label: const Text('Xem mã giảm giá'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1E1B4B),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
