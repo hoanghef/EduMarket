@@ -72,6 +72,7 @@ model User {
   isActive            Boolean             @default(true)
   failedLoginAttempts Int                 @default(0)
   lockedUntil         DateTime?
+  sessionVersion      Int                 @default(0)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   cart                Cart?

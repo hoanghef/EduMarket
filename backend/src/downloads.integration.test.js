@@ -92,7 +92,7 @@ test('download tokens are authenticated, hashed, valid once, and expire with 410
 
 test('admin uploads only allowlisted private files with server-generated storage keys', async () => {
   const admin = await adminLogin();
-  const form = new FormData(); form.append('file', new Blob(['PDF fixture'], { type: 'application/pdf' }), 'lesson.pdf');
+  const form = new FormData(); form.append('file', new Blob(['%PDF-1.4\nPDF fixture'], { type: 'application/pdf' }), 'lesson.pdf');
   const validUpload = await fetch(`${baseUrl}/api/admin/courses/${courseId}/files`, { method: 'POST', headers: { 'X-CSRF-Token': admin.csrfData.token, Cookie: admin.cookie }, body: form });
   const validBody = await validUpload.json(); assert.equal(validUpload.status, 201); uploadedStorageKey = validBody.data.file.storageKey;
   assert.equal(fs.existsSync(privateFilePath(uploadedStorageKey)), true); assert.notEqual(uploadedStorageKey, 'lesson.pdf');
@@ -100,4 +100,9 @@ test('admin uploads only allowlisted private files with server-generated storage
   const invalidForm = new FormData(); invalidForm.append('file', new Blob(['not allowed'], { type: 'application/octet-stream' }), 'malware.exe');
   const invalidUpload = await fetch(`${baseUrl}/api/admin/courses/${courseId}/files`, { method: 'POST', headers: { 'X-CSRF-Token': admin.csrfData.token, Cookie: admin.cookie }, body: invalidForm });
   assert.equal(invalidUpload.status, 400);
+
+  const disguisedForm = new FormData(); disguisedForm.append('file', new Blob(['not a PDF'], { type: 'application/pdf' }), 'disguised.pdf');
+  const disguisedUpload = await fetch(`${baseUrl}/api/admin/courses/${courseId}/files`, { method: 'POST', headers: { 'X-CSRF-Token': admin.csrfData.token, Cookie: admin.cookie }, body: disguisedForm });
+  assert.equal(disguisedUpload.status, 400);
+  assert.equal((await disguisedUpload.json()).code, 'INVALID_FILE_CONTENT');
 });

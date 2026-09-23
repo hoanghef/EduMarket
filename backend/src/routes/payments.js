@@ -2,15 +2,16 @@
 
 const { Router } = require('express');
 const { requireAuth, requireCustomer } = require('../middleware/auth');
+const { paymentCreationLimiter } = require('../middleware/sensitive-rate-limit');
 const { createCheckout } = require('../services/order-service');
 const { config, createPaymentUrl, processCallback } = require('../services/vnpay-service');
 
 const router = Router();
 
-router.post('/vnpay/create', requireAuth, requireCustomer, async (req, res, next) => {
+router.post('/vnpay/create', requireAuth, requireCustomer, paymentCreationLimiter, async (req, res, next) => {
   try {
     config();
-    const order = await createCheckout(req.user.id, 'VNPAY', req);
+    const order = await createCheckout(req.user.id, 'VNPAY', req, req.body?.couponCode);
     const payment = createPaymentUrl(order, req.ip || req.socket?.remoteAddress);
     return res.status(201).json({ success: true, data: { order, paymentUrl: payment.paymentUrl } });
   } catch (error) { return next(error); }

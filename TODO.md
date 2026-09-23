@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Prompt 15 Flutter UI for Advanced Features & Admin Dashboard COMPLETE and verified.
-- Current task: Wishlist UI, Review submission/status UI, Coupon Cart/Checkout UI, Recommendations UI, Admin Dashboard, and 9 Admin Management screens verified.
-- Last completed task: Prompt 15 full scope: Wishlist Flutter UI, Review submission & moderation UI, Coupon application with backend calculation, Course recommendations, Protected Admin Dashboard, 9 Admin sub-screens (Courses, Categories, Orders, Users, Reviews, Coupons, Entitlements, Reports), route guards with 403 Forbidden denial for customers, and responsive states across desktop/tablet/mobile. Verified with `flutter analyze` (0 issues), `flutter test` (18/18 passed), `flutter build web` (passed), `npm test` (19/19 passed), `npx prisma validate` (passed), and complete real browser end-to-end testing.
-- Blocking issues: None.
-- Next recommended task: Proceed to Prompt 16 (Security Audit, IDOR, SQL injection, XSS, CSRF, rate limiting, and database backup verification).
+- Current phase: Prompt 16 Security Audit and Hardening COMPLETE and verified.
+- Current task: Security audit, minimal hardening, policy content, dependency remediation, and backup/restore documentation completed.
+- Last completed task: Prompt 16: session invalidation on logout, production cookie/CORS hardening, sensitive-action limits, upload signature validation, policy APIs, backup/restore scripts and security documentation. Verified with `npm test` (24/24 passed), `npm audit` (0 vulnerabilities), `npx prisma validate`, `npx prisma migrate status` (3 migrations, up to date), `/api/health` (HTTP 200), secret scan, and `git diff --check`.
+- Blocking issues: No code blocker. A real PostgreSQL archive/restore drill remains a production readiness review item because `pg_dump` and `pg_restore` are unavailable in this workspace.
+- Next recommended task: Proceed to Prompt 17 SEO only.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -28,7 +28,7 @@
 | 16. Wishlist | DONE | Authenticated backend CRUD, Flutter wishlist UI, add/remove, course card heart toggle, and browser flow verified |
 | 17. Reviews | DONE | Entitlement-gated review backend, customer review submission with PENDING/APPROVED status, public review list, and browser flow verified |
 | 18. Admin Panel | DONE | Protected admin shell, dashboard KPI cards, review moderation, entitlement management, 9 management screens, customer 403 denial, and browser flow verified |
-| 19. Security Audit | NOT STARTED | |
+| 19. Security Audit | DONE | Backend/Flutter integration audit, session invalidation, production CORS/cookie hardening, upload signature checks, policies, dependency remediation, documentation, and 24 backend tests verified; live restore drill remains documented NEEDS REVIEW |
 | 20. SEO | NOT STARTED | |
 | 21. Testing | NOT STARTED | |
 | 22. Final Browser Verification | NOT STARTED | |
@@ -278,23 +278,25 @@
 - [x] browser tests
 
 ## 19. Security Audit
-- [ ] authentication review
-- [ ] authorization review
-- [ ] IDOR
-- [ ] SQL injection
-- [ ] XSS
-- [ ] CSRF
-- [ ] rate limiting
-- [ ] upload validation
-- [ ] secret management
-- [ ] price manipulation
-- [ ] VNPay verification
-- [ ] entitlement bypass
-- [ ] download security
-- [ ] audit logging
-- [ ] database backup
-- [ ] regression tests
-- [ ] security checklist documentation
+- [x] authentication review
+- [x] authorization review
+- [x] IDOR
+- [x] SQL injection
+- [x] XSS
+- [x] CSRF
+- [x] rate limiting
+- [x] upload validation
+- [x] secret management
+- [x] price manipulation
+- [x] VNPay verification
+- [x] entitlement bypass
+- [x] download security
+- [x] audit logging
+- [x] backup/restore scripts and documentation (PowerShell parser verified; live archive/restore drill requires PostgreSQL client tools)
+- [x] policy/legal demo content API
+- [x] dependency audit and safe remediation
+- [x] regression tests
+- [x] security checklist documentation
 
 ## 20. SEO
 - [ ] path-based URLs

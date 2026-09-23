@@ -10,9 +10,15 @@ dotenv.config();
 
 const app = express();
 
+if (process.env.TRUST_PROXY === 'true') {
+  // Required only when HTTPS is terminated by one trusted reverse proxy.
+  app.set('trust proxy', 1);
+}
+
 // ── Security middleware ──────────────────────────────────────────────────────
 app.use(
   helmet({
+    frameguard: { action: 'deny' },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -25,7 +31,11 @@ app.use(
 );
 
 // CORS – Flutter Web will be served from a different origin in dev
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
+const configuredOrigins = process.env.CORS_ORIGINS;
+if (process.env.NODE_ENV === 'production' && !configuredOrigins) {
+  throw new Error('CORS_ORIGINS must be configured in production.');
+}
+const allowedOrigins = (configuredOrigins || 'http://localhost:3000')
   .split(',')
   .map((o) => o.trim());
 
@@ -62,6 +72,7 @@ const paymentsRouter = require('./routes/payments');
 const libraryRouter = require('./routes/library');
 const { downloadRouter, filesRouter } = require('./routes/downloads');
 const certificatesRouter = require('./routes/certificates');
+const policiesRouter = require('./routes/policies');
 const wishlistRouter = require('./routes/wishlist');
 const reviewsRouter = require('./routes/reviews');
 const couponsRouter = require('./routes/coupons');
@@ -79,6 +90,7 @@ app.use('/api/library', libraryRouter);
 app.use('/api/files', filesRouter);
 app.use('/api/download', downloadRouter);
 app.use('/api/certificates', certificatesRouter);
+app.use('/api/policies', policiesRouter);
 app.use('/api/wishlist', wishlistRouter);
 app.use('/api', reviewsRouter);
 app.use('/api/coupons', couponsRouter);

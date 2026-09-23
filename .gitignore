@@ -5,6 +5,10 @@
 # ── Node / Backend ────────────────────────────────────────────────────────────
 backend/node_modules/
 backend/private_storage/
+backups/
+*.backup
+*.dump
+*.sql.gz
 backend/prisma/migrations/*.sql   # keep migrations tracked
 
 # ── Flutter / Frontend ────────────────────────────────────────────────────────

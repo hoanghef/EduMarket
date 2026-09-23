@@ -42,6 +42,7 @@ router.get('/:code/pdf', requireAuth, requireCustomer, async (req, res, next) =>
     if (!fs.existsSync(pdfPath)) return res.status(404).json({ success: false, code: 'CERTIFICATE_FILE_NOT_FOUND', message: 'Certificate PDF is not available.' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="certificate-${path.basename(certificate.certificateCode)}.pdf"`);
+    res.setHeader('Cache-Control', 'private, no-store');
     return res.sendFile(pdfPath);
   } catch (error) { return next(error); }
 });

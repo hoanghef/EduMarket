@@ -7,10 +7,14 @@ const CSRF_COOKIE_NAME = 'edumarket_csrf';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 function cookieOptions(httpOnly) {
+  const configuredSameSite = (process.env.COOKIE_SAME_SITE || 'Lax').toLowerCase();
+  const sameSite = ['lax', 'strict', 'none'].includes(configuredSameSite) ? configuredSameSite : 'lax';
   return {
     httpOnly,
-    secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: (process.env.COOKIE_SAME_SITE || 'Lax').toLowerCase(),
+    // Production cookies must never be sent over plaintext HTTP. COOKIE_SECURE
+    // can additionally enable this in a staging environment.
+    secure: process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true',
+    sameSite,
     path: '/',
   };
 }
@@ -27,8 +31,8 @@ function sign(value) {
   return crypto.createHmac('sha256', getSessionSecret()).update(value).digest('base64url');
 }
 
-function createSessionValue(userId) {
-  const payload = Buffer.from(JSON.stringify({ userId, exp: Date.now() + SESSION_TTL_MS })).toString('base64url');
+function createSessionValue(userId, sessionVersion = 0) {
+  const payload = Buffer.from(JSON.stringify({ userId, sessionVersion, exp: Date.now() + SESSION_TTL_MS })).toString('base64url');
   return `${payload}.${sign(payload)}`;
 }
 
@@ -36,7 +40,12 @@ function parseCookies(header = '') {
   return header.split(';').reduce((cookies, part) => {
     const index = part.indexOf('=');
     if (index === -1) return cookies;
-    cookies[part.slice(0, index).trim()] = decodeURIComponent(part.slice(index + 1).trim());
+    try {
+      cookies[part.slice(0, index).trim()] = decodeURIComponent(part.slice(index + 1).trim());
+    } catch {
+      // A malformed Cookie header is treated as absent authentication rather
+      // than allowing a bad percent-encoding to reach the error handler.
+    }
     return cookies;
   }, {});
 }
@@ -51,14 +60,14 @@ function verifySessionValue(value) {
 
   try {
     const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    return typeof session.userId === 'string' && Number.isFinite(session.exp) && session.exp > Date.now() ? session : null;
+    return typeof session.userId === 'string' && Number.isInteger(session.sessionVersion) && Number.isFinite(session.exp) && session.exp > Date.now() ? session : null;
   } catch {
     return null;
   }
 }
 
-function issueSessionCookie(res, userId) {
-  res.cookie(AUTH_COOKIE_NAME, createSessionValue(userId), {
+function issueSessionCookie(res, userId, sessionVersion = 0) {
+  res.cookie(AUTH_COOKIE_NAME, createSessionValue(userId, sessionVersion), {
     ...cookieOptions(true),
     maxAge: SESSION_TTL_MS,
   });
@@ -96,6 +105,7 @@ function csrfProtection(req, res, next) {
 module.exports = {
   AUTH_COOKIE_NAME,
   CSRF_COOKIE_NAME,
+  cookieOptions,
   clearSessionCookie,
   csrfProtection,
   issueCsrfToken,

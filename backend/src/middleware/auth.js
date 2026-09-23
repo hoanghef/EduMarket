@@ -10,9 +10,9 @@ async function requireAuth(req, res, next) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, email: true, fullName: true, role: true, isActive: true },
+      select: { id: true, email: true, fullName: true, role: true, isActive: true, sessionVersion: true },
     });
-    if (!user || !user.isActive) return res.status(401).json({ success: false, code: 'UNAUTHENTICATED', message: 'Authentication is required.' });
+    if (!user || !user.isActive || user.sessionVersion !== session.sessionVersion) return res.status(401).json({ success: false, code: 'UNAUTHENTICATED', message: 'Authentication is required.' });
 
     req.user = user;
     return next();

@@ -15,13 +15,14 @@ function tokenHash(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-async function createDownloadToken(userId, fileId) {
+async function createDownloadToken(userId, fileId, req) {
   const file = await prisma.courseFile.findUnique({ where: { id: fileId }, select: { id: true, courseId: true } });
   if (!file) throw new BusinessError(404, 'FILE_NOT_FOUND', 'File not found.');
   await requireActiveEntitlement(userId, file.courseId);
   const token = crypto.randomBytes(32).toString('base64url');
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
-  await prisma.downloadToken.create({ data: { tokenHash: tokenHash(token), userId, courseFileId: file.id, expiresAt, maxDownloads: DEFAULT_MAX_DOWNLOADS } });
+  const record = await prisma.downloadToken.create({ data: { tokenHash: tokenHash(token), userId, courseFileId: file.id, expiresAt, maxDownloads: DEFAULT_MAX_DOWNLOADS } });
+  await prisma.auditLog.create({ data: { userId, action: 'DOWNLOAD_TOKEN_ISSUED', entityType: 'DownloadToken', entityId: record.id, ipAddress: clientIp(req), metadata: { courseFileId: file.id, expiresAt } } });
   return { token, expiresAt };
 }
 

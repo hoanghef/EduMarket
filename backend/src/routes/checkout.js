@@ -2,11 +2,12 @@
 
 const { Router } = require('express');
 const { requireAuth, requireCustomer } = require('../middleware/auth');
+const { checkoutLimiter } = require('../middleware/sensitive-rate-limit');
 const { createCheckout } = require('../services/order-service');
 
 const router = Router();
 
-router.post('/', requireAuth, requireCustomer, async (req, res, next) => {
+router.post('/', requireAuth, requireCustomer, checkoutLimiter, async (req, res, next) => {
   try {
     if (req.body?.method !== 'COD') {
       return res.status(400).json({ success: false, code: 'VALIDATION_ERROR', message: 'Only COD is available for this checkout.' });

@@ -72,6 +72,8 @@ test('register succeeds, issues HttpOnly session, and me/logout enforce the sess
 
   const logout = await jsonRequest('/api/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': csrfData.token, Cookie: authCookies } });
   assert.equal(logout.response.status, 200);
+  const replayedSession = await jsonRequest('/api/auth/me', { headers: { Cookie: `${csrfData.cookies}; ${sessionCookie.split(';')[0]}` } });
+  assert.equal(replayedSession.response.status, 401);
   const afterLogout = await jsonRequest('/api/auth/me', { headers: { Cookie: csrfData.cookies } });
   assert.equal(afterLogout.response.status, 401);
 });
@@ -143,4 +145,10 @@ test('state-changing auth endpoint rejects a missing CSRF token', async () => {
   });
   assert.equal(result.response.status, 403);
   assert.equal(result.body.code, 'CSRF_TOKEN_MISSING');
+});
+
+test('malformed authentication cookies are rejected without a server error', async () => {
+  const result = await jsonRequest('/api/auth/me', { headers: { Cookie: 'edumarket_session=%' } });
+  assert.equal(result.response.status, 401);
+  assert.equal(result.body.code, 'UNAUTHENTICATED');
 });

@@ -33,6 +33,20 @@ function validateFile(originalName, mimeType) {
   return allowedFiles.get(extension)?.has(mimeType) || false;
 }
 
+function validateStoredFileContent(filePath, originalName) {
+  const extension = path.extname(path.basename(originalName || '')).toLowerCase();
+  let signature;
+  try { signature = fs.readFileSync(filePath).subarray(0, 8); } catch { return false; }
+  if (extension === '.pdf') return signature.subarray(0, 5).toString('ascii') === '%PDF-';
+  // ZIP is the container format used for ZIP, DOCX, XLSX and PPTX.
+  return ['.zip', '.docx', '.xlsx', '.pptx'].includes(extension)
+    && signature.length >= 4
+    && signature[0] === 0x50
+    && signature[1] === 0x4b
+    && ([0x03, 0x05, 0x07].includes(signature[2]))
+    && ([0x04, 0x06, 0x08].includes(signature[3]));
+}
+
 function maxFileSizeBytes() {
   const megabytes = Number(process.env.MAX_FILE_SIZE_MB || 100);
   return Number.isFinite(megabytes) && megabytes > 0 && megabytes <= 100 ? megabytes * 1024 * 1024 : 100 * 1024 * 1024;
@@ -72,4 +86,4 @@ function removeStoredFile(storageKey) {
   try { fs.rmSync(privateFilePath(storageKey), { force: true }); } catch { /* best-effort cleanup */ }
 }
 
-module.exports = { maxFileSizeBytes, privateFilePath, privateStorageRoot, removeStoredFile, uploadSingleFile, validateFile };
+module.exports = { maxFileSizeBytes, privateFilePath, privateStorageRoot, removeStoredFile, uploadSingleFile, validateFile, validateStoredFileContent };

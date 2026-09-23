@@ -68,7 +68,7 @@ router.post('/register', async (req, res, next) => {
       return createdUser;
     });
 
-    issueSessionCookie(res, user.id);
+    issueSessionCookie(res, user.id, user.sessionVersion);
     return res.status(201).json({ success: true, data: { user: publicUser(user) } });
   } catch (error) {
     if (error.code === 'P2002') return res.status(409).json({ success: false, code: 'EMAIL_IN_USE', message: 'Email is already registered.' });
@@ -110,7 +110,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
       data: { failedLoginAttempts: 0, lockedUntil: null },
     });
     await audit(user.id, 'LOGIN_SUCCESS', req);
-    issueSessionCookie(res, user.id);
+    issueSessionCookie(res, user.id, authenticatedUser.sessionVersion);
     return res.json({ success: true, data: { user: publicUser(authenticatedUser) } });
   } catch (error) {
     return next(error);
@@ -119,7 +119,8 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 
 router.post('/logout', requireAuth, async (req, res, next) => {
   try {
-    await audit(req.user.id, 'LOGOUT', req);
+    await prisma.user.update({ where: { id: req.user.id }, data: { sessionVersion: { increment: 1 } } });
+    await audit(req.user.id, 'LOGOUT', req, { allSessionsInvalidated: true });
     clearSessionCookie(res);
     return res.json({ success: true, data: { message: 'Logged out.' } });
   } catch (error) {
