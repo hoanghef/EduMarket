@@ -1,11 +1,11 @@
 # EduMarket Project TODO
 
 ## Current Status
-- Current phase: Prompt 17 Technical SEO and Public Policy/Marketing Pages COMPLETE and verified.
-- Current task: URL routing SEO, dynamic titles/meta descriptions, canonical URLs, OpenGraph, JSON-LD structured data (Course, Product, BreadcrumbList), dynamic sitemap.xml, robots.txt, public policy/seller pages, homepage promotion section, dedicated promotions page, and docs/seo.md completed.
-- Last completed task: Prompt 17: flutter web path URL strategy, dynamic DOM metadata/JSON-LD, backend GET /sitemap.xml (excluding private routes), backend and static GET /robots.txt, public policy UI (/chinh-sach/:slug), promotions page (/khuyen-mai) and homepage promotions banner, docs/seo.md. Verified with `flutter analyze` (0 issues), `flutter test` (18/18 passed), `flutter build web` (success), `npm test` (26/26 passed), `npx prisma validate` (valid), live curl tests for sitemap.xml/robots.txt, and live browser navigation.
-- Blocking issues: None.
-- Next recommended task: Proceed to Prompt 18 (Test cases documentation & automated testing) only.
+- Current phase: Prompt 18 QA verification — COMPLETE. 74/75 cases PASS; 0 FAIL; 1 BLOCKED (VNPay live Sandbox due to external public HTTPS callback dependency); 0 NOT RUN.
+- Current task: Browser verification of SEO DOM (QA-66), full customer E2E flow (QA-67), and multi-viewport responsive UI (QA-70) completed. testing/test-cases.md, testing/test-summary.md, and TODO.md updated.
+- Last completed task: Prompt 18 browser verification of customer E2E walkthrough (QA-67), SEO DOM tags/JSON-LD (QA-66), and responsive layouts at 1440x900, 768x1024, 375x667 (QA-70) COMPLETE with zero errors and zero overflows.
+- Blocking issues: QA-75 (VNPay live Sandbox — requires public HTTPS callback endpoint; covered deterministically by signed fixtures).
+- Next recommended task: Prompt 18 verification is complete. Proceed to Prompt 19 (Documentation and final packaging) when requested.
 
 ## Progress Summary
 | Phase | Status | Notes |
@@ -30,8 +30,8 @@
 | 18. Admin Panel | DONE | Protected admin shell, dashboard KPI cards, review moderation, entitlement management, 9 management screens, customer 403 denial, and browser flow verified |
 | 19. Security Audit | DONE | Backend/Flutter integration audit, session invalidation, production CORS/cookie hardening, upload signature checks, policies, dependency remediation, documentation, and 24 backend tests verified; live restore drill remains documented NEEDS REVIEW |
 | 20. SEO | DONE | Non-hash path URLs, dynamic title/meta/canonical/OG/JSON-LD, dynamic sitemap.xml, robots.txt, policy & promotion pages, docs/seo.md verified |
-| 21. Testing | NOT STARTED | |
-| 22. Final Browser Verification | NOT STARTED | |
+| 21. Testing | DONE | 75 cases documented; 74/75 PASS, 1 BLOCKED (VNPay live Sandbox). Backend 27/27, focused E2E, Prisma, Flutter doctor/analyze/test/build, live authorization, live SEO/API, admin UI (QA-62, QA-68), security routing (QA-69), SEO DOM (QA-66), customer E2E (QA-67), and responsive (QA-70) all pass. |
+| 22. Final Browser Verification | DONE | Admin UI (QA-62, QA-68), security routing (QA-69), SEO DOM (QA-66), customer E2E walkthrough (QA-67), and responsive viewports (QA-70) fully verified in live browser. |
 | 23. Documentation and Submission | NOT STARTED | |
 | 24. Final Requirement Audit | NOT STARTED | |
 
@@ -315,61 +315,62 @@
 - [x] verification
 
 ## 21. Testing
-- [ ] minimum 35 documented test cases
-- [ ] authentication tests
-- [ ] catalog tests
-- [ ] cart tests
-- [ ] checkout tests
-- [ ] COD tests
-- [ ] VNPay tests
-- [ ] entitlement tests
-- [ ] download tests
-- [ ] progress tests
-- [ ] certificate tests
-- [ ] wishlist tests
-- [ ] review tests
-- [ ] admin tests
-- [ ] security tests
-- [ ] Actual Result
-- [ ] Status
-- [ ] Evidence
-- [ ] automated backend tests
-- [x] Flutter analyze
-- [x] Flutter test
-- [x] Flutter build web
+- [x] minimum 35 documented test cases (75 in `testing/test-cases.md`)
+- [x] authentication tests
+- [x] catalog tests
+- [x] cart tests
+- [x] checkout tests
+- [x] COD tests
+- [x] VNPay signed-fixture tests (live Sandbox payment remains manual)
+- [x] entitlement tests
+- [x] download tests
+- [x] progress tests
+- [x] certificate tests
+- [x] wishlist tests
+- [x] review tests
+- [x] admin service/API tests
+- [x] security tests
+- [x] Actual Result
+- [x] Status
+- [x] Evidence
+- [x] automated backend tests (`npm.cmd test`: 27/27 pass)
+- [x] Flutter doctor (web toolchain healthy; Visual Studio desktop warning is non-blocking)
+- [x] Flutter analyze (no issues)
+- [x] Flutter test (18/18 passed)
+- [x] Flutter build web (success)
 
 ## 22. Final Browser Verification
 Include customer end-to-end flow:
-- [ ] home
-- [ ] catalog
-- [ ] search
-- [ ] filter
-- [ ] login
-- [ ] cart
-- [ ] coupon
-- [ ] checkout
-- [ ] payment
-- [ ] library
-- [ ] learning
-- [ ] download
-- [ ] progress
-- [ ] certificate
+- [x] home
+- [x] catalog
+- [x] search
+- [x] filter
+- [x] login
+- [x] cart
+- [x] coupon
+- [x] checkout
+- [x] payment
+- [x] library
+- [x] learning
+- [x] download
+- [x] progress
+- [x] certificate
 
 Include admin end-to-end flow:
-- [ ] dashboard
-- [ ] course CRUD
-- [ ] orders
-- [ ] COD confirmation
-- [ ] reviews
-- [ ] coupons
-- [ ] revoke access
-- [ ] restore access
-- [ ] reports
+- [x] dashboard
+- [x] course CRUD
+- [x] orders
+- [x] COD confirmation
+- [x] reviews
+- [x] coupons
+- [x] revoke access
+- [x] restore access
+- [x] reports
 
 Include responsive verification:
-- [ ] desktop
-- [ ] tablet
-- [ ] mobile
+- [x] desktop
+- [x] tablet
+- [x] mobile
 
 ## 23. Documentation and Submission
 - [x] README
