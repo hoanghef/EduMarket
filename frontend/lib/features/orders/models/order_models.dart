@@ -11,6 +11,7 @@ class PaymentModel {
   final String method;
   final String status;
   final double amount;
+  final String? transactionId;
   final DateTime? paidAt;
 
   PaymentModel({
@@ -18,6 +19,7 @@ class PaymentModel {
     required this.method,
     required this.status,
     required this.amount,
+    this.transactionId,
     this.paidAt,
   });
 
@@ -27,6 +29,7 @@ class PaymentModel {
       method: json['method'] ?? 'COD',
       status: json['status'] ?? 'PENDING',
       amount: _toDouble(json['amount']),
+      transactionId: json['transactionId'],
       paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt']) : null,
     );
   }

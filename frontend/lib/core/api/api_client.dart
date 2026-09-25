@@ -46,21 +46,19 @@ Dio createDioClient() {
     InterceptorsWrapper(
       onRequest: (options, handler) {
         options.extra['withCredentials'] = true;
-        if (['POST', 'PUT', 'PATCH', 'DELETE'].contains(options.method.toUpperCase())) {
+        if ([
+          'POST',
+          'PUT',
+          'PATCH',
+          'DELETE',
+        ].contains(options.method.toUpperCase())) {
           if (_csrfToken != null && _csrfToken!.isNotEmpty) {
             options.headers['X-CSRF-Token'] = _csrfToken;
           }
         }
         handler.next(options);
       },
-      onError: (DioException e, handler) {
-        // Centralised error logging; screens handle state transitions.
-        // ignore: avoid_print
-        print('[API ERROR] ${e.requestOptions.method} '
-            '${e.requestOptions.path} → '
-            '${e.response?.statusCode} ${e.message}');
-        handler.next(e);
-      },
+      onError: (DioException e, handler) => handler.next(e),
     ),
   );
 

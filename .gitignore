@@ -9,7 +9,9 @@ backups/
 *.backup
 *.dump
 *.sql.gz
-backend/prisma/migrations/*.sql   # keep migrations tracked
+# Prisma migration history is source and must remain trackable.
+!backend/prisma/migrations/
+!backend/prisma/migrations/**/*.sql
 
 # ── Flutter / Frontend ────────────────────────────────────────────────────────
 frontend/.dart_tool/
@@ -28,5 +30,11 @@ frontend/windows/
 .DS_Store
 Thumbs.db
 *.log
+*_cookie.txt
+cookies*.txt
+*.har
+test-results/
+playwright-report/
+.tmp-flutter-appdata/
 .vscode/
 .idea/

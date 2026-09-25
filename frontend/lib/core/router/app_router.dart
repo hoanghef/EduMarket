@@ -10,6 +10,7 @@ import '../../features/courses/course_detail_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
+import '../../features/checkout/payment_result_screen.dart';
 import '../../features/orders/order_history_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/library/library_screen.dart';
@@ -36,10 +37,7 @@ import '../theme/app_theme.dart';
 
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
-    _ref.listen<AuthState>(
-      authProvider,
-      (_, _) => notifyListeners(),
-    );
+    _ref.listen<AuthState>(authProvider, (_, _) => notifyListeners());
   }
 
   final Ref _ref;
@@ -48,7 +46,8 @@ class RouterNotifier extends ChangeNotifier {
     final authState = _ref.read(authProvider);
     final location = state.matchedLocation;
 
-    final isProtected = location.startsWith('/cart') ||
+    final isProtected =
+        location.startsWith('/cart') ||
         location.startsWith('/checkout') ||
         location.startsWith('/account') ||
         location.startsWith('/library') ||
@@ -142,16 +141,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => LoginScreen(
-          redirectUrl: state.uri.queryParameters['redirect'],
-        ),
+        builder: (context, state) =>
+            LoginScreen(redirectUrl: state.uri.queryParameters['redirect']),
       ),
       GoRoute(
         path: '/register',
         name: 'register',
-        builder: (context, state) => RegisterScreen(
-          redirectUrl: state.uri.queryParameters['redirect'],
-        ),
+        builder: (context, state) =>
+            RegisterScreen(redirectUrl: state.uri.queryParameters['redirect']),
       ),
       GoRoute(
         path: '/library',
@@ -181,6 +178,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/checkout',
         name: 'checkout',
         builder: (context, _) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        path: '/checkout/result',
+        name: 'checkoutResult',
+        builder: (context, state) => PaymentResultScreen(
+          orderId: state.uri.queryParameters['orderId'],
+          queryParams: state.uri.queryParameters,
+        ),
       ),
       GoRoute(
         path: '/account/orders',
@@ -216,9 +221,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/certificates/:code',
         name: 'certificateDetail',
-        builder: (context, state) => CertificateDetailScreen(
-          code: state.pathParameters['code']!,
-        ),
+        builder: (context, state) =>
+            CertificateDetailScreen(code: state.pathParameters['code']!),
       ),
       // ── Wishlist ────────────────────────────────────────────────────────────
       GoRoute(
@@ -235,9 +239,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chinh-sach/:slug',
         name: 'policy',
-        builder: (context, state) => PolicyScreen(
-          slug: state.pathParameters['slug'] ?? 'business',
-        ),
+        builder: (context, state) =>
+            PolicyScreen(slug: state.pathParameters['slug'] ?? 'business'),
       ),
 
       // ── Marketing & Promotions ──────────────────────────────────────────────
@@ -324,48 +327,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
-
-/// Fallback router instance for static references.
-final appRouter = GoRouter(
-  initialLocation: AppConstants.routeHome,
-  routes: [
-    GoRoute(path: '/', builder: (c, _) => const HomeScreen()),
-    GoRoute(path: '/login', builder: (c, _) => const LoginScreen()),
-    GoRoute(path: '/register', builder: (c, _) => const RegisterScreen()),
-    GoRoute(path: '/cart', builder: (c, _) => const CartScreen()),
-    GoRoute(path: '/checkout', builder: (c, _) => const CheckoutScreen()),
-    GoRoute(path: '/account/orders', builder: (c, _) => const OrderHistoryScreen()),
-  ],
-);
-
-/// Placeholder screen for routes not yet implemented.
-// ignore: unused_element
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.construction_outlined,
-                size: 64, color: AppTheme.primary),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            const Text('Tính năng này đang được phát triển.'),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => context.go('/'),
-              child: const Text('Về trang chủ'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

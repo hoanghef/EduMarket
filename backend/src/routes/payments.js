@@ -23,11 +23,22 @@ async function callback(req, res, next, isIpn) {
     if (isIpn) {
       return res.json({ RspCode: result.idempotent ? '02' : '00', Message: result.idempotent ? 'Order already confirmed' : 'Confirm Success' });
     }
+    const isBrowserHtml = req.headers.accept && req.headers.accept.includes('text/html') && !req.headers.accept.includes('application/json');
+    if (isBrowserHtml) {
+      const frontendOrigin = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',')[0].trim();
+      return res.redirect(`${frontendOrigin}/checkout/result?orderId=${result.order.id}`);
+    }
     return res.json({ success: true, data: { order: result.order, idempotent: result.idempotent } });
   } catch (error) {
     if (isIpn) {
       const rspCode = error.code === 'VNPAY_INVALID_SIGNATURE' ? '97' : error.code === 'VNPAY_ORDER_NOT_FOUND' ? '01' : error.code === 'VNPAY_AMOUNT_MISMATCH' ? '04' : '99';
       return res.status(200).json({ RspCode: rspCode, Message: error.message });
+    }
+    const isBrowserHtml = req.headers.accept && req.headers.accept.includes('text/html') && !req.headers.accept.includes('application/json');
+    if (isBrowserHtml) {
+      const frontendOrigin = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',')[0].trim();
+      const orderRef = req.query?.vnp_TxnRef ? `&orderNumber=${encodeURIComponent(req.query.vnp_TxnRef)}` : '';
+      return res.redirect(`${frontendOrigin}/checkout/result?error=${encodeURIComponent(error.message || 'Payment failed')}${orderRef}`);
     }
     return next(error);
   }

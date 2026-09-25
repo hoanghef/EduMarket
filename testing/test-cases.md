@@ -1,6 +1,6 @@
 # EduMarket QA Test Cases
 
-Execution date: 2026-09-23 (browser verification session: 2026-09-23). `PASS` is assigned only where the evidence listed was executed in this run. 74 of 75 test cases PASS (0 FAIL, 1 BLOCKED, 0 NOT RUN). VNPay live Sandbox (`QA-75`) remains the only `BLOCKED` test case due to no public HTTPS callback URL. Full customer end-to-end flow (`QA-67`), SEO DOM verification (`QA-66`), and Responsive verification (`QA-70`) are all fully verified in the live browser and promoted to `PASS`.
+Execution date: 2026-09-23 (browser verification session: 2026-09-23; final automated regression: 2026-09-24). `PASS` is assigned only where the evidence listed was executed in this run. 74 of 75 test cases PASS (0 FAIL, 1 BLOCKED, 0 NOT RUN). VNPay live Sandbox (`QA-75`) remains the only `BLOCKED` test case due to no public HTTPS callback URL. Full customer end-to-end flow (`QA-67`), SEO DOM verification (`QA-66`), and Responsive verification (`QA-70`) are all fully verified in the live browser and promoted to `PASS`.
 
 | Test Case ID | Feature / Module | Preconditions | Test Steps | Expected Result | Actual Result | Status | Evidence |
 |---|---|---|---|---|---|---|---|
@@ -77,7 +77,7 @@ Execution date: 2026-09-23 (browser verification session: 2026-09-23). `PASS` is
 
 | QA-71 | Flutter environment — doctor | Resolved local SDK cache/AppData environment | Run `flutter doctor -v` through Flutter tool | Flutter web toolchain available | Flutter, Chrome, Android and network checks passed; unrelated Visual Studio Windows-desktop workload warning remains | PASS | Flutter tool `doctor -v`, 2026-09-23 |
 | QA-72 | Flutter — static analysis | Flutter environment usable | Run `flutter analyze` in `frontend` | No analyzer issues | `No issues found! (ran in 1.2s)` | PASS | Flutter tool `analyze`, 2026-09-23 |
-| QA-73 | Flutter — widget tests | Flutter environment usable | Run `flutter test` in `frontend` | All widget tests pass | 18 tests passed | PASS | Flutter tool `test`, 2026-09-23 |
+| QA-73 | Flutter — widget tests | Flutter environment usable | Run `flutter test` in `frontend` | All widget tests pass | 25 tests passed | PASS | Flutter tool `test`, 2026-09-25 |
 | QA-74 | Flutter — production web build | Flutter environment usable | Run `flutter build web` in `frontend` | Web bundle builds successfully | `Built build\\web`; Wasm dry run succeeded | PASS | Flutter tool `build web`, 2026-09-23 |
 | QA-75 | VNPay Sandbox — live callback | Valid Sandbox merchant credentials and public HTTPS return/IPN endpoint | Create payment, complete Sandbox flow, observe callback/IPN | Signed callback changes payment/order once and grants entitlement | Not executed: configured callback host is `localhost`, so VNPay cannot reach a public HTTPS return/IPN endpoint | BLOCKED | Environment inspection 2026-09-23: `VNPAY_RETURN_HOST=localhost`, `VNPAY_RETURN_IS_PUBLIC=False` |
 
@@ -86,5 +86,5 @@ Execution date: 2026-09-23 (browser verification session: 2026-09-23). `PASS` is
 - Full backend command: `npm.cmd test` — 27 tests passed, 0 failed (15.601 s on final regression rerun).
 - Focused critical journey: `node --test --test-concurrency=1 src/purchase-to-certificate.e2e.test.js` — 1 passed, 0 failed (1.360 s). It creates its own published course and customer, registers, logs in, browses/searches, adds to cart, attempts forged totals, uses COD, has an admin confirm payment, asserts the entitlement/library, completes required lessons, issues the certificate, and verifies it publicly. It cleans its fixtures after execution.
 - Flutter doctor: Flutter 3.38.4, Chrome and network resources available. Its only warning is the missing Visual Studio C++ Windows-desktop workload, which does not affect Flutter Web checks.
-- Flutter analyze: PASS, no issues (1.3 s on final regression rerun). Flutter test: PASS, 18 widget tests. Flutter build web: PASS, `build\\web` generated (32.1 s compilation on final regression rerun).
+- Flutter analyze: PASS, no issues (1.2 s on final regression rerun). Flutter test: PASS, 25 widget tests (including 7 new deterministic checkout and VNPay flow tests). Flutter build web: PASS, `build\\web` generated (46.7 s compilation on final regression rerun).
 - VNPay is deterministic automated coverage using local signed Sandbox fixtures. It does not submit a real card/payment in the VNPay Sandbox.

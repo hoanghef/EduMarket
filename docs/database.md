@@ -1,69 +1,60 @@
-# Cơ sở dữ liệu EduMarket
+# EduMarket database
 
-## Tổng quan
+EduMarket uses PostgreSQL through Prisma. The authoritative schema is backend/prisma/schema.prisma, migration history is in backend/prisma/migrations, and the repeatable development seed is backend/prisma/seed.js. Monetary values use Decimal(12,2).
 
-EduMarket dùng PostgreSQL và Prisma ORM. Schema nguồn nằm tại `backend/prisma/schema.prisma`; migration đầu tiên nằm trong `backend/prisma/migrations/`. Tất cả giá tiền dùng `Decimal(12,2)` để tránh sai số số thực.
+## Setup
 
-Không ghi thông tin kết nối thật vào tài liệu hoặc Git. Sao chép `backend/.env.example` thành `backend/.env`, sau đó đặt `DATABASE_URL` cho PostgreSQL cục bộ.
+From backend:
 
-## Khởi tạo
+~~~powershell
+npm run db:generate
+npx prisma migrate dev
+npm run db:seed
+~~~
 
-Chạy các lệnh từ thư mục `backend`:
+Use Prisma Studio only for local development:
 
-```powershell
-npm.cmd run db:generate
-npx.cmd prisma migrate dev --name init_database
-npm.cmd run db:seed
-```
+~~~powershell
+npx prisma studio
+~~~
 
-Để xem dữ liệu trực quan trong môi trường phát triển, có thể chạy `npx.cmd prisma studio`.
+Set DATABASE_URL in backend/.env. Do not commit connection strings, dumps, or real user data.
 
-## Mô hình dữ liệu
+## Main entities
 
-- `User`: tài khoản khách hàng hoặc quản trị viên; có mật khẩu băm, trạng thái khóa đăng nhập và quan hệ với đơn hàng, quyền học, tiến độ, đánh giá, yêu thích, mã giảm giá và nhật ký.
-- `Category`: danh mục đa cấp qua `parentId`; một danh mục có thể có nhiều danh mục con và khóa học.
-- `Course`, `Lesson`, `CourseFile`: nội dung bán; bài học có vị trí duy nhất trong khóa học. Tệp dùng `storageKey` riêng tư, không có URL công khai.
-- `Cart`, `CartItem`: mỗi người dùng có tối đa một giỏ; một khóa học chỉ xuất hiện một lần trong giỏ.
-- `Order`, `OrderItem`, `Payment`: dữ liệu giao dịch. `OrderItem` giữ tiêu đề, slug và giá tại thời điểm mua để bảo toàn lịch sử.
-- `CourseEntitlement`: quyền truy cập theo người dùng/khóa học, có thể `ACTIVE` hoặc `REVOKED`.
-- `CourseProgress`: một bản ghi hoàn thành cho mỗi cặp người dùng/bài học; ràng buộc duy nhất làm thao tác hoàn thành có tính idempotent.
-- `DownloadToken`: chỉ lưu `tokenHash`, thời hạn, số lượt tải và giới hạn lượt tải. Token thuần chỉ được tạo trong bộ nhớ khi endpoint tải xuống được xây dựng ở giai đoạn sau.
-- `Certificate`: một chứng chỉ duy nhất cho mỗi người dùng/khóa học.
-- `Review`, `Wishlist`: mỗi người dùng chỉ có một đánh giá và một mục yêu thích trên mỗi khóa học.
-- `Coupon`, `CouponUsage`: hỗ trợ phần trăm/giảm cố định, thời gian hiệu lực, giá trị đơn tối thiểu, giảm tối đa, giới hạn tổng và giới hạn từng người dùng.
-- `AuditLog`: lưu hành động nhạy cảm cùng người dùng, đối tượng, IP, metadata JSON và thời gian.
+- User, Cart and CartItem: customer/admin accounts, password hashes, cart ownership, login lockout/session state.
+- Category, Course, Lesson and CourseFile: hierarchical catalog and private learning content.
+- Order, OrderItem and Payment: immutable transaction snapshots and payment state.
+- CourseEntitlement, CourseProgress and DownloadToken: active/revoked access, idempotent lesson completion, and one-use expiring download tokens.
+- Certificate: one completion certificate per user/course and its public verification code.
+- Review, Wishlist, Coupon and CouponUsage: advanced e-commerce features and moderation/redemption constraints.
+- AuditLog: security and business-event traceability.
 
-## Enum chính
+## Important integrity rules
 
-`Role` gồm `CUSTOMER`, `ADMIN`. Các enum nghiệp vụ còn lại là `CourseStatus`, `CourseLevel`, `OrderStatus`, `PaymentStatus`, `PaymentMethod`, `EntitlementStatus`, `ReviewStatus` và `DiscountType`.
+- Unique constraints protect email, category/course slugs, order number, certificate code, coupon code, storage key, token hash, payment transaction ID, cart/course, order/course, user/course entitlement, review, wishlist, certificate, and user/lesson progress.
+- Category hierarchy uses parentId. Course/lesson/file content cascades appropriately; transaction history uses restrictive relationships where a historical record must remain traceable.
+- Catalog, orders, payments, entitlements, downloads, reviews, coupons and audit logs have indexes used by their primary filtering paths.
+- DownloadToken stores only SHA-256 tokenHash, expiry, counter and maximum download count. The raw token exists only while a temporary URL is issued and is never stored in the database.
 
-## Ràng buộc và chỉ mục quan trọng
+## Seed data
 
-- Email, slug danh mục/khóa học, mã đơn, mã chứng chỉ, mã coupon, `storageKey`, `tokenHash` và mã giao dịch thanh toán là duy nhất.
-- Các tổ hợp duy nhất ngăn dữ liệu trùng: giỏ/khóa học, đơn/khóa học, người dùng/khóa học cho quyền học, đánh giá, yêu thích và chứng chỉ, cùng người dùng/bài học cho tiến độ.
-- Có chỉ mục cho truy vấn catalog (trạng thái, danh mục, cấp độ, giá, đánh giá, độ phổ biến), danh mục cha, đơn hàng, thanh toán, quyền học, token hết hạn, đánh giá, coupon và audit log.
-- Các quan hệ xóa được chọn theo nghiệp vụ: dữ liệu nội dung phụ thuộc được xóa cùng khóa học; đơn hàng, thanh toán, quyền học và lịch sử liên quan dùng `Restrict` khi cần giữ dấu vết giao dịch.
+The idempotent seed creates one ADMIN and five CUSTOMER demonstration accounts, four parent categories with children, 20 Vietnamese courses with lessons, active coupons, and carts. It uses bcrypt cost 12.
 
-## Dữ liệu mẫu
+| Role | Email | Demo password |
+| --- | --- | --- |
+| Admin | admin@edumarket.local | EduMarket@2026 |
+| Customer | an.nguyen@edumarket.local and four additional seeded customers | EduMarket@2026 |
 
-Seed có tính lặp lại an toàn (upsert và `skipDuplicates`) và tạo:
+These values are for local demonstrations only. They are not production credentials.
 
-- 1 quản trị viên và 5 khách hàng;
-- 4 danh mục cha, mỗi danh mục có 2 danh mục con;
-- 20 khóa học tiếng Việt, mỗi khóa có 3 bài học;
-- 3 coupon còn hiệu lực và giỏ hàng trống cho mỗi khách hàng.
+## Final verification
 
-Tất cả tài khoản mẫu dùng mật khẩu `EduMarket@2026`, được băm bằng bcrypt với cost 12 trước khi ghi xuống cơ sở dữ liệu. Không có mật khẩu thuần trong bản ghi `User`.
+The Prompt 19 regression ran:
 
-Tài khoản quản trị: `admin@edumarket.local`.
+~~~powershell
+npx prisma validate
+npx prisma migrate status
+~~~
 
-## Truy vấn kiểm tra mẫu
-
-```javascript
-await prisma.course.count({ where: { status: "PUBLISHED" } });
-await prisma.category.findMany({ where: { parentId: null }, include: { children: true } });
-await prisma.course.findMany({ take: 3, include: { lessons: true } });
-await prisma.coupon.findMany({ where: { isActive: true } });
-```
-
-Khi triển khai API, việc tạo download token phải sinh chuỗi ngẫu nhiên, băm bằng SHA-256 hoặc thuật toán phù hợp trước khi lưu vào `DownloadToken.tokenHash`, và chỉ trả token thuần một lần trong URL tạm thời.
+The schema validated and all three migrations were reported as applied/up to date. The database was not reset.

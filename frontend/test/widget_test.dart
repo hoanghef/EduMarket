@@ -18,6 +18,8 @@ import 'package:edumarket/features/cart/providers/cart_provider.dart';
 import 'package:edumarket/features/cart/models/cart_models.dart';
 import 'package:edumarket/features/cart/cart_screen.dart';
 import 'package:edumarket/features/checkout/checkout_screen.dart';
+import 'package:edumarket/features/checkout/payment_result_screen.dart';
+import 'package:edumarket/core/utils/url_launcher_helper.dart';
 import 'package:edumarket/features/orders/providers/order_provider.dart';
 import 'package:edumarket/features/orders/models/order_models.dart';
 import 'package:dio/dio.dart';
@@ -109,9 +111,12 @@ class FakeCatalogRepository implements CatalogRepository {
 }
 
 class FakeCartRepository implements CartRepository {
+  FakeCartRepository({this.cart});
+  final CartModel? cart;
+
   @override
   Future<CartModel> getCart() async {
-    return CartModel(id: 'cart-1', userId: 'user-1', items: []);
+    return cart ?? CartModel(id: 'cart-1', userId: 'user-1', items: []);
   }
 
   @override
@@ -122,17 +127,85 @@ class FakeCartRepository implements CartRepository {
 }
 
 class FakeOrderRepository implements OrderRepository {
+  FakeOrderRepository({
+    this.createVnpayPaymentResult,
+    this.createVnpayThrows,
+    this.orderDetailOverride,
+  });
+
+  final VnpayPaymentResult? createVnpayPaymentResult;
+  final Object? createVnpayThrows;
+  final OrderModel? orderDetailOverride;
+
   @override
   Future<OrderModel> checkoutCod({String? couponCode}) async {
     return OrderModel(
       id: 'ord-123',
       orderNumber: 'ORD-123',
-      subtotal: 0,
+      subtotal: 500000,
       discountAmount: 0,
-      totalAmount: 0,
+      totalAmount: 500000,
       status: 'PENDING',
       createdAt: DateTime.now(),
       items: [],
+      payment: PaymentModel(
+        id: 'pay-123',
+        method: 'COD',
+        status: 'PENDING',
+        amount: 500000,
+      ),
+    );
+  }
+
+  @override
+  Future<VnpayPaymentResult> createVnpayPayment({String? couponCode}) async {
+    if (createVnpayThrows != null) {
+      throw createVnpayThrows!;
+    }
+    if (createVnpayPaymentResult != null) {
+      return createVnpayPaymentResult!;
+    }
+    return VnpayPaymentResult(
+      order: OrderModel(
+        id: 'ord-vnpay-123',
+        orderNumber: 'ORD-VNP-123',
+        subtotal: 500000,
+        discountAmount: 0,
+        totalAmount: 500000,
+        status: 'PENDING_PAYMENT',
+        createdAt: DateTime.now(),
+        items: [],
+        payment: PaymentModel(
+          id: 'pay-vnp-123',
+          method: 'VNPAY',
+          status: 'PENDING',
+          amount: 500000,
+        ),
+      ),
+      paymentUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=50000000',
+    );
+  }
+
+  @override
+  Future<OrderModel> processVnpayReturn(Map<String, dynamic> queryParams) async {
+    if (orderDetailOverride != null) {
+      return orderDetailOverride!;
+    }
+    return OrderModel(
+      id: 'ord-vnpay-123',
+      orderNumber: 'ORD-VNP-123',
+      subtotal: 500000,
+      discountAmount: 0,
+      totalAmount: 500000,
+      status: 'PAID',
+      createdAt: DateTime.now(),
+      items: [],
+      payment: PaymentModel(
+        id: 'pay-vnp-123',
+        method: 'VNPAY',
+        status: 'SUCCESS',
+        amount: 500000,
+      ),
     );
   }
 
@@ -141,12 +214,15 @@ class FakeOrderRepository implements OrderRepository {
 
   @override
   Future<OrderModel> getOrderDetail(String id) async {
+    if (orderDetailOverride != null) {
+      return orderDetailOverride!;
+    }
     return OrderModel(
       id: id,
       orderNumber: 'ORD-$id',
-      subtotal: 0,
+      subtotal: 500000,
       discountAmount: 0,
-      totalAmount: 0,
+      totalAmount: 500000,
       status: 'PENDING',
       createdAt: DateTime.now(),
       items: [],
@@ -387,6 +463,8 @@ class FakeAdminRepository implements AdminRepository {
 void main() {
   ProviderContainer createContainer({
     UserModel? loggedInUser,
+    CartModel? cart,
+    OrderRepository? orderRepository,
     List<CertificateItem> certificates = const [],
     List<WishlistItemModel> wishlistItems = const [],
     List<ReviewItemModel> courseReviews = const [],
@@ -408,8 +486,8 @@ void main() {
           FakeAuthRepository(initialUser: loggedInUser),
         ),
         catalogRepositoryProvider.overrideWithValue(FakeCatalogRepository()),
-        cartRepositoryProvider.overrideWithValue(FakeCartRepository()),
-        orderRepositoryProvider.overrideWithValue(FakeOrderRepository()),
+        cartRepositoryProvider.overrideWithValue(FakeCartRepository(cart: cart)),
+        orderRepositoryProvider.overrideWithValue(orderRepository ?? FakeOrderRepository()),
         certificateRepositoryProvider.overrideWithValue(
           FakeCertificateRepository(certificates: certificates),
         ),
@@ -443,6 +521,13 @@ void main() {
         GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
         GoRoute(path: '/cart', builder: (c, s) => const CartScreen()),
         GoRoute(path: '/checkout', builder: (c, s) => const CheckoutScreen()),
+        GoRoute(
+          path: '/checkout/result',
+          builder: (c, s) => PaymentResultScreen(
+            orderId: s.uri.queryParameters['orderId'],
+            queryParams: s.uri.queryParameters,
+          ),
+        ),
         GoRoute(path: '/account/orders', builder: (c, s) => const OrderHistoryScreen()),
       ],
     );
@@ -932,5 +1017,244 @@ void main() {
 
     expect(find.text('Bảng điều khiển quản trị'), findsOneWidget);
     expect(find.text('Tổng doanh thu'), findsOneWidget);
+  });
+
+  group('Checkout & VNPay Payment Flow', () {
+    final sampleCourse = CourseModel(
+      id: 'c101',
+      title: 'Khóa học Flutter Toàn Tập',
+      slug: 'khoa-hoc-flutter-toan-tap',
+      instructorName: 'EduMarket',
+      price: 500000,
+      ratingAverage: 5.0,
+      ratingCount: 10,
+      enrollmentCount: 100,
+      level: 'ALL_LEVELS',
+      category: const CategoryModel(id: 'cat-1', name: 'Lập trình', slug: 'lap-trinh'),
+    );
+
+    final sampleCart = CartModel(
+      id: 'cart-101',
+      userId: 'user-101',
+      items: [
+        CartItemModel(
+          id: 'ci-101',
+          cartId: 'cart-101',
+          courseId: 'c101',
+          course: sampleCourse,
+          createdAt: DateTime.now(),
+        ),
+      ],
+    );
+
+    const testCustomer = UserModel(
+      id: 'c101',
+      email: 'customer@example.com',
+      fullName: 'Nguyễn Văn A',
+      role: 'CUSTOMER',
+    );
+
+    testWidgets('COD payment selection is default and displays COD action', (WidgetTester tester) async {
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        cart: sampleCart,
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp('/checkout', container));
+      await pumpUntilResolved(tester);
+
+      expect(find.text('Phương thức thanh toán'), findsOneWidget);
+      expect(find.byKey(const Key('payment_method_cod')), findsOneWidget);
+      expect(find.byKey(const Key('payment_method_vnpay')), findsOneWidget);
+      expect(find.text('Xác nhận đặt hàng'), findsOneWidget);
+    });
+
+    testWidgets('VNPay payment selection switches method and displays redirect note', (WidgetTester tester) async {
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        cart: sampleCart,
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp('/checkout', container));
+      await pumpUntilResolved(tester);
+
+      // Select VNPay
+      await tester.tap(find.byKey(const Key('payment_method_vnpay')));
+      await pumpUntilResolved(tester);
+
+      expect(find.text('Bạn sẽ được chuyển hướng sang cổng thanh toán VNPay Sandbox an toàn để hoàn tất giao dịch.'), findsOneWidget);
+      expect(find.text('Thanh toán qua VNPay'), findsOneWidget);
+    });
+
+    testWidgets('VNPay create-payment success intercepts and opens redirect URL', (WidgetTester tester) async {
+      String? interceptedUrl;
+      setCustomRedirectHandler((url) {
+        interceptedUrl = url;
+      });
+      addTearDown(() => setCustomRedirectHandler(null));
+
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        cart: sampleCart,
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp('/checkout', container));
+      await pumpUntilResolved(tester);
+
+      // Select VNPay
+      await tester.tap(find.byKey(const Key('payment_method_vnpay')));
+      await pumpUntilResolved(tester);
+
+      // Tap payment button
+      await tester.tap(find.byKey(const Key('place_order_button')));
+      await pumpUntilResolved(tester);
+
+      expect(interceptedUrl, isNotNull);
+      expect(interceptedUrl, contains('vnpayment.vn'));
+      expect(interceptedUrl, contains('vnp_Amount=50000000'));
+    });
+
+    testWidgets('create-payment failure displays error snackbar without crashing', (WidgetTester tester) async {
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        cart: sampleCart,
+        orderRepository: FakeOrderRepository(
+          createVnpayThrows: Exception('Cổng VNPay đang bảo trì'),
+        ),
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp('/checkout', container));
+      await pumpUntilResolved(tester);
+
+      // Select VNPay
+      await tester.tap(find.byKey(const Key('payment_method_vnpay')));
+      await pumpUntilResolved(tester);
+
+      // Tap payment button
+      await tester.tap(find.byKey(const Key('place_order_button')));
+      await pumpUntilResolved(tester);
+
+      expect(find.textContaining('Cổng VNPay đang bảo trì'), findsOneWidget);
+      expect(find.text('Thanh toán qua VNPay'), findsOneWidget);
+    });
+
+    testWidgets('missing payment URL displays informative error', (WidgetTester tester) async {
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        cart: sampleCart,
+        orderRepository: FakeOrderRepository(
+          createVnpayPaymentResult: VnpayPaymentResult(
+            order: OrderModel(
+              id: 'ord-err',
+              orderNumber: 'ORD-ERR',
+              subtotal: 500000,
+              discountAmount: 0,
+              totalAmount: 500000,
+              status: 'PENDING_PAYMENT',
+              createdAt: DateTime.now(),
+              items: [],
+            ),
+            paymentUrl: '',
+          ),
+        ),
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp('/checkout', container));
+      await pumpUntilResolved(tester);
+
+      await tester.tap(find.byKey(const Key('payment_method_vnpay')));
+      await pumpUntilResolved(tester);
+
+      await tester.tap(find.byKey(const Key('place_order_button')));
+      await pumpUntilResolved(tester);
+
+      expect(find.textContaining('Không nhận được đường dẫn thanh toán'), findsOneWidget);
+    });
+
+    testWidgets('return/result screen displays backend PAID status and action buttons', (WidgetTester tester) async {
+      final paidOrder = OrderModel(
+        id: 'ord-paid-999',
+        orderNumber: 'ORD-PAID-999',
+        subtotal: 500000,
+        discountAmount: 0,
+        totalAmount: 500000,
+        status: 'PAID',
+        createdAt: DateTime.now(),
+        items: [],
+        payment: PaymentModel(
+          id: 'pay-999',
+          method: 'VNPAY',
+          status: 'SUCCESS',
+          amount: 500000,
+          transactionId: 'VNP1488999',
+        ),
+      );
+
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        orderRepository: FakeOrderRepository(
+          orderDetailOverride: paidOrder,
+        ),
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp('/checkout/result?orderId=ord-paid-999', container));
+      await pumpUntilResolved(tester);
+
+      expect(find.text('Thanh toán thành công!'), findsOneWidget);
+      expect(find.text('ĐÃ THANH TOÁN (PAID)'), findsOneWidget);
+      expect(find.text('ORD-PAID-999'), findsOneWidget);
+      expect(find.text('VNP1488999'), findsOneWidget);
+      expect(find.text('Vào thư viện học ngay'), findsOneWidget);
+    });
+
+    testWidgets('UI must not locally mark an order PAID from client query parameters alone', (WidgetTester tester) async {
+      final pendingOrder = OrderModel(
+        id: 'ord-spoof-1',
+        orderNumber: 'ORD-SPOOF-1',
+        subtotal: 500000,
+        discountAmount: 0,
+        totalAmount: 500000,
+        status: 'PENDING_PAYMENT',
+        createdAt: DateTime.now(),
+        items: [],
+        payment: PaymentModel(
+          id: 'pay-spoof-1',
+          method: 'VNPAY',
+          status: 'PENDING',
+          amount: 500000,
+        ),
+      );
+
+      final container = createContainer(
+        loggedInUser: testCustomer,
+        orderRepository: FakeOrderRepository(
+          orderDetailOverride: pendingOrder,
+        ),
+      );
+      addTearDown(container.dispose);
+      setupDesktopViewport(tester);
+
+      await tester.pumpWidget(createTestApp(
+        '/checkout/result?orderId=ord-spoof-1&vnp_ResponseCode=00&vnp_TransactionStatus=00',
+        container,
+      ));
+      await pumpUntilResolved(tester);
+
+      expect(find.text('Thanh toán thành công!'), findsNothing);
+      expect(find.text('Đang chờ xử lý thanh toán'), findsOneWidget);
+      expect(find.text('ĐANG CHỜ (PENDING)'), findsOneWidget);
+    });
   });
 }

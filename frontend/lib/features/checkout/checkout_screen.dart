@@ -1,9 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/seo/seo_data.dart';
 import '../../core/seo/seo_helper.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/url_launcher_helper.dart';
 import '../../core/widgets/app_shell.dart';
 import '../cart/models/cart_models.dart';
 import '../cart/providers/cart_provider.dart';
@@ -27,17 +29,42 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       final repo = ref.read(orderRepositoryProvider);
       final appliedCoupon = ref.read(couponProvider).coupon;
-      final order = await repo.checkoutCod(couponCode: appliedCoupon?.code);
-      ref.read(couponProvider.notifier).removeCoupon();
-      // Clear cart state via invalidation or refresh
-      ref.invalidate(cartProvider);
-      if (mounted) {
-        context.go('/account/orders/${order.id}');
+      final couponCode = appliedCoupon?.code;
+
+      if (_paymentMethod == 'VNPAY') {
+        final paymentResult = await repo.createVnpayPayment(couponCode: couponCode);
+        if (paymentResult.paymentUrl.trim().isEmpty) {
+          throw Exception('Không nhận được đường dẫn thanh toán từ hệ thống VNPay.');
+        }
+        ref.read(couponProvider.notifier).removeCoupon();
+        ref.invalidate(cartProvider);
+        if (mounted) {
+          redirectToUrl(paymentResult.paymentUrl);
+        }
+      } else {
+        final order = await repo.checkoutCod(couponCode: couponCode);
+        ref.read(couponProvider.notifier).removeCoupon();
+        ref.invalidate(cartProvider);
+        if (mounted) {
+          context.go('/account/orders/${order.id}');
+        }
       }
     } catch (e) {
       if (mounted) {
+        String message = e.toString();
+        if (e is DioException) {
+          final data = e.response?.data;
+          if (data is Map && data['message'] != null) {
+            message = data['message'].toString();
+          }
+        } else if (e is Exception) {
+          message = e.toString().replaceFirst('Exception: ', '');
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi đặt hàng: ${e.toString()}'), backgroundColor: AppTheme.error),
+          SnackBar(
+            content: Text('Lỗi khi đặt hàng: $message'),
+            backgroundColor: AppTheme.error,
+          ),
         );
       }
     } finally {
@@ -105,6 +132,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                 _CheckoutAction(
                                   cart: cart,
                                   onPlaceOrder: _placeOrder,
+                                  paymentMethod: _paymentMethod,
                                 ),
                               ],
                             )
@@ -131,6 +159,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                   child: _CheckoutAction(
                                     cart: cart,
                                     onPlaceOrder: _placeOrder,
+                                    paymentMethod: _paymentMethod,
                                   ),
                                 ),
                               ],
@@ -183,30 +212,48 @@ class _PaymentMethodSelection extends StatelessWidget {
         Card(
           child: RadioGroup<String>(
             groupValue: selectedMethod,
-            onChanged: (val) {
-              if (val != 'VNPAY') {
-                onMethodChanged(val);
-              }
-            },
+            onChanged: onMethodChanged,
             child: Column(
               children: [
-                RadioListTile(
+                RadioListTile<String>(
+                  key: const Key('payment_method_cod'),
                   value: 'COD',
                   title: const Text('Thanh toán chuyển khoản (COD mô phỏng)'),
                   subtitle: const Text('Admin sẽ xác nhận thanh toán thủ công'),
                   secondary: const Icon(Icons.account_balance, color: AppTheme.primary),
                 ),
                 const Divider(height: 1),
-                Opacity(
-                  opacity: 0.5,
-                  child: IgnorePointer(
-                    child: RadioListTile(
-                      value: 'VNPAY',
-                      title: const Text('VNPay (Đang phát triển)'),
-                      secondary: const Icon(Icons.payment, color: AppTheme.onSurfaceVariant),
+                RadioListTile<String>(
+                  key: const Key('payment_method_vnpay'),
+                  value: 'VNPAY',
+                  title: const Text('Cổng thanh toán VNPay Sandbox'),
+                  subtitle: const Text('Thanh toán qua thẻ ATM, QR Code hoặc thẻ quốc tế'),
+                  secondary: const Icon(Icons.payment, color: AppTheme.primary),
+                ),
+                if (selectedMethod == 'VNPAY') ...[
+                  const Divider(height: 1),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 20, color: AppTheme.primary),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Bạn sẽ được chuyển hướng sang cổng thanh toán VNPay Sandbox an toàn để hoàn tất giao dịch.',
+                            style: TextStyle(fontSize: 13, color: AppTheme.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -249,9 +296,15 @@ class _OrderSummaryDetails extends StatelessWidget {
 }
 
 class _CheckoutAction extends ConsumerWidget {
-  const _CheckoutAction({required this.cart, required this.onPlaceOrder});
+  const _CheckoutAction({
+    required this.cart,
+    required this.onPlaceOrder,
+    this.paymentMethod = 'COD',
+  });
+
   final CartModel cart;
   final VoidCallback onPlaceOrder;
+  final String paymentMethod;
 
   String _fmtPrice(double p) {
     final n = p.toInt();
@@ -269,6 +322,8 @@ class _CheckoutAction extends ConsumerWidget {
     final subtotal = applied != null ? applied.subtotal : cart.subtotal;
     final discount = applied != null ? applied.discountAmount : 0.0;
     final total = applied != null ? applied.totalAmount : cart.subtotal;
+
+    final isVnpay = paymentMethod == 'VNPAY';
 
     return Card(
       child: Padding(
@@ -313,10 +368,15 @@ class _CheckoutAction extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            FilledButton.icon(
+              key: const Key('place_order_button'),
               onPressed: onPlaceOrder,
+              icon: Icon(isVnpay ? Icons.payment : Icons.check_circle_outline),
+              label: Text(
+                isVnpay ? 'Thanh toán qua VNPay' : 'Xác nhận đặt hàng',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
               style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: const Text('Xác nhận đặt hàng', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             ),
             const SizedBox(height: 16),
             const Text('Bằng việc xác nhận, bạn đồng ý với Điều khoản dịch vụ của chúng tôi.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppTheme.onSurfaceVariant)),
