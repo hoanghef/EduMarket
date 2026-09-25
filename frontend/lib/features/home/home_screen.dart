@@ -495,13 +495,13 @@ class _CourseSection extends ConsumerWidget {
                     );
                   }
                   return SizedBox(
-                    height: 300,
+                    height: 340,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: page.items.length,
                       separatorBuilder: (context, _) => const SizedBox(width: 16),
                       itemBuilder: (context, i) => SizedBox(
-                        width: 220,
+                        width: 230,
                         child: CourseCard(course: page.items[i]),
                       ),
                     ),

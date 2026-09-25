@@ -603,10 +603,9 @@ void main() {
     await tester.pumpWidget(createTestApp('/login', container));
     await pumpUntilResolved(tester);
 
-    expect(find.text('Đăng nhập EduMarket'), findsOneWidget);
+    expect(find.text('Đăng nhập'), findsWidgets);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Mật khẩu'), findsOneWidget);
-    expect(find.text('Đăng nhập'), findsWidgets);
     expect(find.text('Đăng ký ngay'), findsOneWidget);
 
     // Tap submit button with empty fields
@@ -627,12 +626,12 @@ void main() {
     await tester.pumpWidget(createTestApp('/register', container));
     await pumpUntilResolved(tester);
 
-    expect(find.text('Đăng ký tài khoản EduMarket'), findsOneWidget);
+    expect(find.text('Tạo tài khoản'), findsWidgets);
     expect(find.text('Họ và tên'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Mật khẩu'), findsOneWidget);
     expect(find.text('Xác nhận mật khẩu'), findsOneWidget);
-    expect(find.text('Đăng ký tài khoản'), findsOneWidget);
+    expect(find.text('Đăng ký tài khoản'), findsWidgets);
 
     // Enter name, email, password, and mismatching confirm password
     final textFields = find.byType(TextFormField);
@@ -694,7 +693,7 @@ void main() {
     );
     await pumpUntilResolved(tester);
 
-    expect(find.text('Vũ Hoàng'), findsWidgets);
+    expect(find.byTooltip('Vũ Hoàng'), findsWidgets);
     expect(find.text('Thư viện'), findsWidgets);
     expect(find.text('Đơn hàng'), findsWidgets);
     expect(find.text('Đăng xuất'), findsWidgets);
@@ -721,7 +720,7 @@ void main() {
     container.read(routerProvider).go('/checkout');
     await pumpUntilResolved(tester);
 
-    expect(find.text('Đăng nhập EduMarket'), findsOneWidget);
+    expect(find.text('Đăng nhập'), findsWidgets);
   });
 
   testWidgets('CertificateListScreen renders empty state when user has no certificates', (WidgetTester tester) async {

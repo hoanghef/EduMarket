@@ -45,15 +45,22 @@ class _VerticalCardState extends State<_VerticalCard> {
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
+        transform: _hovered
+            ? Matrix4.translationValues(0, -3, 0)
+            : Matrix4.identity(),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.divider),
+          border: Border.all(
+            color: _hovered
+                ? AppTheme.primary.withValues(alpha: 0.3)
+                : AppTheme.divider,
+          ),
           boxShadow: _hovered
               ? [
                   BoxShadow(
                     color: AppTheme.primary.withValues(alpha: 0.12),
-                    blurRadius: 20,
+                    blurRadius: 16,
                     offset: const Offset(0, 6),
                   )
                 ]
@@ -75,10 +82,15 @@ class _VerticalCardState extends State<_VerticalCard> {
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(12)),
                     child: AspectRatio(
                       aspectRatio: 16 / 9,
-                      child: _CourseThumbnail(url: course.thumbnailUrl, title: course.title),
+                      child: _CourseThumbnail(
+                        url: course.thumbnailUrl,
+                        title: course.title,
+                        category: course.category?.name,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -86,7 +98,9 @@ class _VerticalCardState extends State<_VerticalCard> {
                     right: 6,
                     child: Consumer(
                       builder: (context, ref, _) {
-                        final isFav = ref.watch(wishlistProvider).containsCourse(course.id);
+                        final isFav = ref
+                            .watch(wishlistProvider)
+                            .containsCourse(course.id);
                         return Material(
                           color: Colors.black.withValues(alpha: 0.5),
                           shape: const CircleBorder(),
@@ -94,15 +108,24 @@ class _VerticalCardState extends State<_VerticalCard> {
                             customBorder: const CircleBorder(),
                             onTap: () async {
                               try {
-                                await ref.read(wishlistProvider.notifier).toggleWishlist(course.id);
+                                await ref
+                                    .read(wishlistProvider.notifier)
+                                    .toggleWishlist(course.id);
                               } catch (_) {}
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(6.0),
-                              child: Icon(
-                                isFav ? Icons.favorite : Icons.favorite_border,
-                                color: isFav ? AppTheme.error : Colors.white,
-                                size: 16,
+                              child: AnimatedScale(
+                                scale: isFav ? 1.15 : 1.0,
+                                duration: const Duration(milliseconds: 180),
+                                curve: Curves.easeOutBack,
+                                child: Icon(
+                                  isFav
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isFav ? AppTheme.error : Colors.white,
+                                  size: 16,
+                                ),
                               ),
                             ),
                           ),
@@ -114,14 +137,14 @@ class _VerticalCardState extends State<_VerticalCard> {
               ),
               // ── Body ─────────────────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Category chip
                     if (course.category != null)
                       _SmallChip(label: course.category!.name),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     // Title
                     Text(
                       course.title,
@@ -129,27 +152,31 @@ class _VerticalCardState extends State<_VerticalCard> {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            height: 1.25,
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     // Instructor
                     Text(
                       course.instructorName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
                           ?.copyWith(color: AppTheme.onSurfaceVariant),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     // Rating
                     StarRating(
                       rating: course.ratingAverage,
                       count: course.ratingCount,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     // Price
                     _PriceRow(course: course),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     // Level badge
                     _LevelBadge(level: course.level),
                   ],
@@ -188,7 +215,11 @@ class _HorizontalCard extends StatelessWidget {
                     borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
                     child: AspectRatio(
                       aspectRatio: 16 / 9,
-                      child: _CourseThumbnail(url: course.thumbnailUrl, title: course.title),
+                      child: _CourseThumbnail(
+                        url: course.thumbnailUrl,
+                        title: course.title,
+                        category: course.category?.name,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -265,9 +296,10 @@ class _HorizontalCard extends StatelessWidget {
 // ── Shared subwidgets ─────────────────────────────────────────────────────────
 
 class _CourseThumbnail extends StatelessWidget {
-  const _CourseThumbnail({required this.url, required this.title});
+  const _CourseThumbnail({required this.url, required this.title, this.category});
   final String? url;
   final String title;
+  final String? category;
 
   @override
   Widget build(BuildContext context) {
@@ -275,27 +307,60 @@ class _CourseThumbnail extends StatelessWidget {
       return Image.network(
         url!,
         fit: BoxFit.cover,
-        errorBuilder: (context, e, _) => _Placeholder(title: title),
+        errorBuilder: (context, e, _) =>
+            _Placeholder(title: title, category: category),
       );
     }
-    return _Placeholder(title: title);
+    return _Placeholder(title: title, category: category);
   }
 }
 
 class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.title});
+  const _Placeholder({required this.title, this.category});
   final String title;
+  final String? category;
+
+  /// Returns gradient colors based on category name
+  List<Color> get _gradientColors {
+    final cat = (category ?? '').toLowerCase();
+    if (cat.contains('lập trình') || cat.contains('phát triển')) {
+      return [const Color(0xFF4F46E5), const Color(0xFF7C3AED)];
+    } else if (cat.contains('thiết kế')) {
+      return [const Color(0xFFEC4899), const Color(0xFFF59E0B)];
+    } else if (cat.contains('kinh doanh') || cat.contains('marketing')) {
+      return [const Color(0xFF059669), const Color(0xFF0891B2)];
+    } else if (cat.contains('dữ liệu') || cat.contains('khoa học')) {
+      return [const Color(0xFF0EA5E9), const Color(0xFF6366F1)];
+    } else if (cat.contains('di động') || cat.contains('mobile')) {
+      return [const Color(0xFFF97316), const Color(0xFFEF4444)];
+    }
+    return [const Color(0xFF4F46E5), const Color(0xFF06B6D4)];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.surfaceVariant,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: _gradientColors,
+        ),
+      ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.play_circle_outline, size: 36, color: AppTheme.primary),
-            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.play_arrow_rounded,
+                  size: 32, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
@@ -303,7 +368,11 @@ class _Placeholder extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11, color: AppTheme.onSurfaceVariant),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

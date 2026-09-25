@@ -335,13 +335,13 @@ class _CourseContent extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),
                 SizedBox(
-                  height: 300,
+                  height: 340,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: recs.length,
                     separatorBuilder: (context, _) => const SizedBox(width: 16),
                     itemBuilder: (context, i) =>
-                        SizedBox(width: 220, child: CourseCard(course: recs[i])),
+                        SizedBox(width: 230, child: CourseCard(course: recs[i])),
                   ),
                 ),
               ],

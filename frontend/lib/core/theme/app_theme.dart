@@ -202,5 +202,35 @@ abstract final class AppTheme {
     ),
     dividerTheme: const DividerThemeData(color: divider, thickness: 1),
     scaffoldBackgroundColor: surface,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: _SubtleFadeTransitionsBuilder(),
+        TargetPlatform.iOS: _SubtleFadeTransitionsBuilder(),
+        TargetPlatform.linux: _SubtleFadeTransitionsBuilder(),
+        TargetPlatform.macOS: _SubtleFadeTransitionsBuilder(),
+        TargetPlatform.windows: _SubtleFadeTransitionsBuilder(),
+      },
+    ),
   );
+}
+
+class _SubtleFadeTransitionsBuilder extends PageTransitionsBuilder {
+  const _SubtleFadeTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOut,
+      ),
+      child: child,
+    );
+  }
 }

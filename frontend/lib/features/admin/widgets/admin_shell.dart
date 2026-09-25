@@ -88,21 +88,9 @@ class AdminShell extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: _navItems.map((item) {
                   final isSelected = currentRoute == item.route;
-                  return ListTile(
-                    leading: Icon(
-                      isSelected ? item.activeIcon : item.icon,
-                      color: isSelected ? AppTheme.primary : AppTheme.onSurfaceVariant,
-                    ),
-                    title: Text(
-                      item.label,
-                      style: TextStyle(
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? AppTheme.primary : AppTheme.onSurface,
-                        fontSize: 14,
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedTileColor: AppTheme.primary.withValues(alpha: 0.08),
+                  return _AdminNavItem(
+                    item: item,
+                    isSelected: isSelected,
                     onTap: () {
                       if (!isDesktop) Navigator.of(context).pop();
                       context.go(item.route);
@@ -187,22 +175,9 @@ class AdminShell extends ConsumerWidget {
                   children: [
                     ..._navItems.map((item) {
                       final isSelected = currentRoute == item.route;
-                      return ListTile(
-                        leading: Icon(
-                          isSelected ? item.activeIcon : item.icon,
-                          color: isSelected ? AppTheme.primary : AppTheme.onSurfaceVariant,
-                          size: 20,
-                        ),
-                        title: Text(
-                          item.label,
-                          style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? AppTheme.primary : AppTheme.onSurface,
-                            fontSize: 14,
-                          ),
-                        ),
-                        selected: isSelected,
-                        selectedTileColor: AppTheme.primary.withValues(alpha: 0.08),
+                      return _AdminNavItem(
+                        item: item,
+                        isSelected: isSelected,
                         onTap: () => context.go(item.route),
                       );
                     }),
@@ -223,6 +198,81 @@ class AdminShell extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AdminNavItem extends StatefulWidget {
+  const _AdminNavItem({
+    required this.item,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final ({IconData icon, IconData activeIcon, String label, String route}) item;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  State<_AdminNavItem> createState() => _AdminNavItemState();
+}
+
+class _AdminNavItemState extends State<_AdminNavItem> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = widget.isSelected;
+    final item = widget.item;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppTheme.primary.withValues(alpha: 0.1)
+                  : (_hovered ? Colors.grey.shade100 : Colors.transparent),
+              borderRadius: BorderRadius.circular(8),
+              border: isSelected
+                  ? const Border(left: BorderSide(color: AppTheme.primary, width: 3))
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? item.activeIcon : item.icon,
+                  color: isSelected
+                      ? AppTheme.primary
+                      : (_hovered
+                          ? AppTheme.primary
+                          : AppTheme.onSurfaceVariant),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? AppTheme.primary : AppTheme.onSurface,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

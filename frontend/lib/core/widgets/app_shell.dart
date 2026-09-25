@@ -43,10 +43,43 @@ abstract final class Breakpoint {
 }
 
 /// Wraps every page with the site navbar and footer.
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.child});
 
   final Widget child;
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _fadeCtrl;
+  late final Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    )..forward();
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+  }
+
+  @override
+  void didUpdateWidget(AppShell old) {
+    super.didUpdateWidget(old);
+    if (old.child != widget.child) {
+      _fadeCtrl.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +88,12 @@ class AppShell extends StatelessWidget {
       body: Column(
         children: [
           const _Navbar(),
-          Expanded(child: child),
+          Expanded(
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: widget.child,
+            ),
+          ),
           const _Footer(),
         ],
       ),
@@ -134,121 +172,87 @@ class _NavbarState extends ConsumerState<_Navbar> {
 
                 // Desktop: nav links + search + cart + auth
                 if (!isCompact) ...[
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   _NavLink(label: 'Trang chủ', path: '/'),
                   _NavLink(label: 'Khóa học', path: '/khoa-hoc'),
                   const Spacer(),
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (showSearchBar) ...[
-                            const SizedBox(width: 180, child: _NavSearchBar()),
-                            const SizedBox(width: 8),
-                          ],
-                          // Wishlist button
-                          IconButton(
-                            icon: const Icon(Icons.favorite_border, size: 22),
-                            tooltip: 'Yêu thích',
-                            onPressed: () => context.go('/wishlist'),
-                          ),
-                          const SizedBox(width: 4),
-                          // Cart button
-                          IconButton(
-                            icon: const Icon(Icons.shopping_cart_outlined, size: 22),
-                            tooltip: 'Giỏ hàng',
-                            onPressed: () => context.go('/cart'),
-                          ),
-                          const SizedBox(width: 4),
-                          if (isLoggedIn) ...[
-                            TextButton.icon(
-                              onPressed: () => context.go('/library'),
-                              icon: const Icon(Icons.library_books_outlined, size: 18),
-                              label: const Text('Thư viện'),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              tooltip: 'Chứng chỉ của tôi',
-                              icon: const Icon(Icons.workspace_premium_outlined, size: 22),
-                              onPressed: () => context.go('/certificates'),
-                            ),
-                            const SizedBox(width: 4),
-                            TextButton.icon(
-                              onPressed: () => context.go('/account/orders'),
-                              icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                              label: const Text('Đơn hàng'),
-                            ),
-                            if (user.isAdmin) ...[
-                              const SizedBox(width: 4),
-                              FilledButton.tonal(
-                                onPressed: () => context.go('/admin'),
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 8),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.shield_outlined, size: 15),
-                                    SizedBox(width: 4),
-                                    Text('Quản trị', style: TextStyle(fontSize: 12)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.surfaceVariant,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.person_outline,
-                                      size: 16, color: AppTheme.primary),
-                                  const SizedBox(width: 4),
-                                  ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 110),
-                                    child: Text(
-                                      user.fullName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.onSurface,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            OutlinedButton(
-                              onPressed: () => ref.read(authProvider.notifier).logout(),
-                              child: const Text('Đăng xuất'),
-                            ),
-                          ] else ...[
-                            OutlinedButton(
-                              onPressed: () => context.go('/login'),
-                              child: const Text('Đăng nhập'),
-                            ),
-                            const SizedBox(width: 8),
-                            FilledButton(
-                              onPressed: () => context.go('/register'),
-                              child: const Text('Đăng ký'),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
+                  if (showSearchBar) ...[
+                    const SizedBox(width: 180, child: _NavSearchBar()),
+                    const SizedBox(width: 8),
+                  ],
+                  // Wishlist button
+                  IconButton(
+                    icon: const Icon(Icons.favorite_border, size: 20),
+                    tooltip: 'Yêu thích',
+                    onPressed: () => context.go('/wishlist'),
                   ),
+                  // Cart button
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+                    tooltip: 'Giỏ hàng',
+                    onPressed: () => context.go('/cart'),
+                  ),
+                  if (isLoggedIn) ...[
+                    const SizedBox(width: 2),
+                    TextButton.icon(
+                      onPressed: () => context.go('/library'),
+                      icon: const Icon(Icons.library_books_outlined, size: 16),
+                      label: const Text('Thư viện',
+                          style: TextStyle(fontSize: 13)),
+                    ),
+                    IconButton(
+                      tooltip: 'Chứng chỉ',
+                      icon: const Icon(Icons.workspace_premium_outlined, size: 20),
+                      onPressed: () => context.go('/certificates'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.go('/account/orders'),
+                      icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                      label: const Text('Đơn hàng',
+                          style: TextStyle(fontSize: 13)),
+                    ),
+                    if (user.isAdmin) ...[
+                      const SizedBox(width: 2),
+                      FilledButton.tonal(
+                        onPressed: () => context.go('/admin'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shield_outlined, size: 14),
+                            SizedBox(width: 3),
+                            Text('Admin', style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 4),
+                    _UserAvatarChip(name: user.fullName),
+                    const SizedBox(width: 4),
+                    OutlinedButton(
+                      onPressed: () => ref.read(authProvider.notifier).logout(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      child: const Text('Đăng xuất',
+                          style: TextStyle(fontSize: 13)),
+                    ),
+                  ] else ...[
+                    const SizedBox(width: 4),
+                    OutlinedButton(
+                      onPressed: () => context.go('/login'),
+                      child: const Text('Đăng nhập'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () => context.go('/register'),
+                      child: const Text('Đăng ký'),
+                    ),
+                  ],
                 ] else ...[
                   const Spacer(),
                   IconButton(
@@ -277,20 +281,48 @@ class _NavbarState extends ConsumerState<_Navbar> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 children: [
-                  _MobileNavLink(label: 'Trang chủ', path: '/'),
-                  _MobileNavLink(label: 'Khóa học', path: '/khoa-hoc'),
-                  _MobileNavLink(label: 'Yêu thích', path: '/wishlist'),
-                  _MobileNavLink(label: 'Giỏ hàng', path: '/cart'),
+                  _MobileNavLink(
+                    label: 'Trang chủ',
+                    path: '/',
+                    icon: Icons.home_outlined,
+                  ),
+                  _MobileNavLink(
+                    label: 'Khóa học',
+                    path: '/khoa-hoc',
+                    icon: Icons.school_outlined,
+                  ),
+                  _MobileNavLink(
+                    label: 'Yêu thích',
+                    path: '/wishlist',
+                    icon: Icons.favorite_border,
+                  ),
+                  _MobileNavLink(
+                    label: 'Giỏ hàng',
+                    path: '/cart',
+                    icon: Icons.shopping_cart_outlined,
+                  ),
                   if (isLoggedIn) ...[
                     _MobileNavLink(
-                        label: 'Thư viện của tôi', path: '/library'),
+                      label: 'Thư viện của tôi',
+                      path: '/library',
+                      icon: Icons.library_books_outlined,
+                    ),
                     _MobileNavLink(
-                        label: 'Chứng chỉ của tôi', path: '/certificates'),
+                      label: 'Chứng chỉ của tôi',
+                      path: '/certificates',
+                      icon: Icons.workspace_premium_outlined,
+                    ),
                     _MobileNavLink(
-                        label: 'Đơn hàng của tôi', path: '/account/orders'),
+                      label: 'Đơn hàng của tôi',
+                      path: '/account/orders',
+                      icon: Icons.receipt_long_outlined,
+                    ),
                     if (user.isAdmin)
                       _MobileNavLink(
-                          label: 'Khu vực quản trị (Admin)', path: '/admin'),
+                        label: 'Khu vực quản trị (Admin)',
+                        path: '/admin',
+                        icon: Icons.shield_outlined,
+                      ),
                     const SizedBox(height: 8),
                     const Divider(),
                     ListTile(
@@ -370,17 +402,27 @@ class _NavLinkState extends State<_NavLink> {
     final isActive = location == widget.path ||
         (widget.path != '/' && location.startsWith(widget.path));
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: () => context.go(widget.path),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppTheme.primary.withValues(alpha: 0.1)
+                : (_hovered ? Colors.grey.shade100 : Colors.transparent),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Text(
             widget.label,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isActive || _hovered ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: isActive
+                  ? FontWeight.w700
+                  : (_hovered ? FontWeight.w600 : FontWeight.w500),
               color: isActive
                   ? AppTheme.primary
                   : (_hovered ? AppTheme.primary : AppTheme.onSurface),
@@ -393,14 +435,37 @@ class _NavLinkState extends State<_NavLink> {
 }
 
 class _MobileNavLink extends StatelessWidget {
-  const _MobileNavLink({required this.label, required this.path});
+  const _MobileNavLink({required this.label, required this.path, this.icon});
   final String label;
   final String path;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
+    String location = '';
+    try {
+      location = GoRouterState.of(context).matchedLocation;
+    } catch (_) {}
+    final isActive =
+        location == path || (path != '/' && location.startsWith(path));
+
     return ListTile(
-      title: Text(label),
+      leading: icon != null
+          ? Icon(icon,
+              size: 20,
+              color: isActive ? AppTheme.primary : AppTheme.onSurfaceVariant)
+          : null,
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+          color: isActive ? AppTheme.primary : AppTheme.onSurface,
+        ),
+      ),
+      selected: isActive,
+      selectedTileColor: AppTheme.primary.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onTap: () => context.go(path),
       dense: true,
     );
@@ -445,6 +510,48 @@ class _NavSearchBar extends StatelessWidget {
   }
 }
 
+// ── User Avatar Chip ──────────────────────────────────────────────────────────
+
+class _UserAvatarChip extends StatelessWidget {
+  const _UserAvatarChip({required this.name});
+  final String name;
+
+  String get _initials {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: name,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppTheme.primary, Color(0xFF7C3AED)],
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            _initials,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 class _Footer extends StatelessWidget {
@@ -457,14 +564,15 @@ class _Footer extends StatelessWidget {
       color: AppTheme.onSurface,
       padding: EdgeInsets.symmetric(
         horizontal: Breakpoint.pagePadding(context),
-        vertical: 32,
+        vertical: 14,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+          constraints:
+              const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
           child: Breakpoint.isMobile(context)
-              ? _FooterMobile()
-              : _FooterDesktop(),
+              ? const _FooterMobile()
+              : const _FooterDesktop(),
         ),
       ),
     );
@@ -472,6 +580,8 @@ class _Footer extends StatelessWidget {
 }
 
 class _FooterDesktop extends StatelessWidget {
+  const _FooterDesktop();
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -488,8 +598,8 @@ class _FooterDesktop extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        width: 28,
-                        height: 28,
+                        width: 26,
+                        height: 26,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [AppTheme.primary, Color(0xFF7C3AED)],
@@ -497,7 +607,7 @@ class _FooterDesktop extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(Icons.school_rounded,
-                            color: Colors.white, size: 16),
+                            color: Colors.white, size: 15),
                       ),
                       const SizedBox(width: 8),
                       const Text(
@@ -505,23 +615,24 @@ class _FooterDesktop extends StatelessWidget {
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
-                            fontSize: 16),
+                            fontSize: 15),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   const Text(
                     'Nền tảng học trực tuyến hàng đầu\ncho người học Việt Nam.',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.6),
+                    style: TextStyle(
+                        color: Color(0xFF94A3B8), fontSize: 12, height: 1.5),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 32),
-            Expanded(
+            const SizedBox(width: 24),
+            const Expanded(
               child: _FooterColumn(
                 title: 'Khám phá',
-                links: const [
+                links: [
                   ('Tất cả khóa học', '/khoa-hoc'),
                   ('Lập trình', '/danh-muc/lap-trinh'),
                   ('Thiết kế', '/danh-muc/thiet-ke'),
@@ -529,11 +640,11 @@ class _FooterDesktop extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 32),
-            Expanded(
+            const SizedBox(width: 24),
+            const Expanded(
               child: _FooterColumn(
                 title: 'Chính sách & Quy định',
-                links: const [
+                links: [
                   ('Thông tin người bán', '/chinh-sach/business'),
                   ('Điều khoản giao dịch', '/chinh-sach/terms'),
                   ('Chính sách hoàn tiền', '/chinh-sach/refunds'),
@@ -541,11 +652,11 @@ class _FooterDesktop extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 32),
-            Expanded(
+            const SizedBox(width: 24),
+            const Expanded(
               child: _FooterColumn(
                 title: 'Tài khoản',
-                links: const [
+                links: [
                   ('Đăng nhập', '/login'),
                   ('Đăng ký', '/register'),
                   ('Thư viện của tôi', '/library'),
@@ -556,12 +667,21 @@ class _FooterDesktop extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 32),
-        const Divider(color: Color(0xFF334155)),
-        const SizedBox(height: 16),
-        const Text(
-          '© 2026 EduMarket – CSE703102 E-commerce Capstone Project',
-          style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+        const SizedBox(height: 12),
+        const Divider(color: Color(0xFF334155), height: 1),
+        const SizedBox(height: 10),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '© 2026 EduMarket – CSE703102 E-commerce Capstone Project',
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+            ),
+            Text(
+              'Học tập mọi lúc, nâng tầm tương lai',
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+            ),
+          ],
         ),
       ],
     );
@@ -569,65 +689,89 @@ class _FooterDesktop extends StatelessWidget {
 }
 
 class _FooterMobile extends StatelessWidget {
+  const _FooterMobile();
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text(
-          'EduMarket',
-          style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Nền tảng học trực tuyến hàng đầu\ncho người học Việt Nam.',
-          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.6),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            GestureDetector(
-              onTap: () => context.go('/khoa-hoc'),
-              child: const Text('Khóa học', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.primary, Color(0xFF7C3AED)],
+                ),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: const Icon(Icons.school_rounded,
+                  color: Colors.white, size: 13),
             ),
-            GestureDetector(
-              onTap: () => context.go('/khuyen-mai'),
-              child: const Text('Khuyến mãi', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-            ),
-            GestureDetector(
-              onTap: () => context.go('/chinh-sach/business'),
-              child: const Text('Người bán', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-            ),
-            GestureDetector(
-              onTap: () => context.go('/chinh-sach/terms'),
-              child: const Text('Điều khoản', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-            ),
-            GestureDetector(
-              onTap: () => context.go('/chinh-sach/refunds'),
-              child: const Text('Hoàn tiền', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-            ),
-            GestureDetector(
-              onTap: () => context.go('/chinh-sach/privacy'),
-              child: const Text('Bảo mật', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-            ),
-            GestureDetector(
-              onTap: () => context.go('/certificates/verify'),
-              child: const Text('Xác thực chứng chỉ', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+            const SizedBox(width: 6),
+            const Text(
+              'EduMarket',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15),
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        const Divider(color: Color(0xFF334155)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
+        const Text(
+          'Nền tảng học trực tuyến hàng đầu cho người học Việt Nam',
+          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
+        const Wrap(
+          spacing: 12,
+          runSpacing: 4,
+          alignment: WrapAlignment.center,
+          children: [
+            _FooterMobileLink(label: 'Khóa học', path: '/khoa-hoc'),
+            _FooterMobileLink(label: 'Khuyến mãi', path: '/khuyen-mai'),
+            _FooterMobileLink(label: 'Người bán', path: '/chinh-sach/business'),
+            _FooterMobileLink(label: 'Điều khoản', path: '/chinh-sach/terms'),
+            _FooterMobileLink(label: 'Hoàn tiền', path: '/chinh-sach/refunds'),
+            _FooterMobileLink(label: 'Bảo mật', path: '/chinh-sach/privacy'),
+            _FooterMobileLink(
+                label: 'Xác thực chứng chỉ', path: '/certificates/verify'),
+          ],
+        ),
+        const SizedBox(height: 10),
+        const Divider(color: Color(0xFF334155), height: 1),
+        const SizedBox(height: 8),
         const Text(
           '© 2026 EduMarket',
-          style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+          style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
         ),
       ],
+    );
+  }
+}
+
+class _FooterMobileLink extends StatelessWidget {
+  const _FooterMobileLink({required this.label, required this.path});
+  final String label;
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go(path),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF94A3B8),
+          fontSize: 11,
+          decoration: TextDecoration.underline,
+          decorationColor: Color(0xFF64748B),
+        ),
+      ),
     );
   }
 }
@@ -645,24 +789,48 @@ class _FooterColumn extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+              color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
         ),
-        const SizedBox(height: 12),
-        ...links.map((l) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () => context.go(l.$2),
-                child: Text(
-                  l.$1,
-                  style: const TextStyle(
-                      color: Color(0xFF94A3B8),
-                      fontSize: 13,
-                      decoration: TextDecoration.underline,
-                      decorationColor: Color(0xFF94A3B8)),
-                ),
-              ),
-            )),
+        const SizedBox(height: 8),
+        ...links.map((l) => _FooterLinkItem(label: l.$1, path: l.$2)),
       ],
+    );
+  }
+}
+
+class _FooterLinkItem extends StatefulWidget {
+  const _FooterLinkItem({required this.label, required this.path});
+  final String label;
+  final String path;
+
+  @override
+  State<_FooterLinkItem> createState() => _FooterLinkItemState();
+}
+
+class _FooterLinkItemState extends State<_FooterLinkItem> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: () => context.go(widget.path),
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 150),
+            style: TextStyle(
+              color: _hovered ? Colors.white : const Color(0xFF94A3B8),
+              fontSize: 12,
+              fontWeight: _hovered ? FontWeight.w500 : FontWeight.w400,
+            ),
+            child: Text(widget.label),
+          ),
+        ),
+      ),
     );
   }
 }
