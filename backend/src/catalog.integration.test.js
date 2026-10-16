@@ -21,7 +21,7 @@ test('admin can create catalog content and public filters return the published c
   assert.equal(category.response.status, 201); categoryId = category.body.data.category.id;
   const course = await request('/api/admin/courses', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': admin.csrfData.token, Cookie: admin.cookie }, body: JSON.stringify({ title: 'Catalog Filter ' + suffix, slug: 'catalog-filter-' + suffix, categoryId, description: 'Course created for catalog integration testing.', instructorName: 'API Instructor', price: 100000, salePrice: 50000, level: 'BEGINNER', status: 'PUBLISHED', ratingAverage: 0, enrollmentCount: 99999 }) });
   assert.equal(course.response.status, 201); courseId = course.body.data.course.id; assert.equal(course.body.data.course.enrollmentCount, 0);
-  const filtered = await request('/api/courses?q=Catalog%20Filter%20' + suffix + '&category=api-test-' + suffix + '&minPrice=90000&maxPrice=110000&level=BEGINNER&rating=0&instructor=API%20Instructor&sort=popularity&page=1&limit=5');
+  const filtered = await request('/api/courses?q=Catalog%20Filter%20' + suffix + '&category=api-test-' + suffix + '&minPrice=40000&maxPrice=60000&level=BEGINNER&rating=0&instructor=API%20Instructor&sort=popularity&page=1&limit=5');
   assert.equal(filtered.response.status, 200); assert.equal(filtered.body.data.items.some((item) => item.id === courseId), true);
   const recommendations = await request('/api/courses/' + courseId + '/recommendations'); assert.equal(recommendations.response.status, 200);
 });

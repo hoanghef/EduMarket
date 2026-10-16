@@ -17,8 +17,9 @@ class WishlistRepository {
   }
 
   Future<WishlistItemModel> addToWishlist(String courseId) async {
-    final response =
-        await _dio.post<Map<String, dynamic>>('/api/wishlist/$courseId');
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/api/wishlist/$courseId',
+    );
     final data = response.data?['data'] as Map<String, dynamic>?;
     final item = data?['item'] as Map<String, dynamic>? ?? {};
     return WishlistItemModel.fromJson(item);
@@ -44,8 +45,9 @@ class WishlistState {
   final bool isLoading;
   final String? errorMessage;
 
-  bool containsCourse(String courseId) =>
-      items.any((item) => item.courseId == courseId || item.course.id == courseId);
+  bool containsCourse(String courseId) => items.any(
+    (item) => item.courseId == courseId || item.course.id == courseId,
+  );
 
   WishlistState copyWith({
     List<WishlistItemModel>? items,
@@ -63,7 +65,7 @@ class WishlistState {
 
 class WishlistNotifier extends StateNotifier<WishlistState> {
   WishlistNotifier(this._repository)
-      : super(const WishlistState(items: [], isLoading: false)) {
+    : super(const WishlistState(items: [], isLoading: false)) {
     loadWishlist();
   }
 
@@ -87,8 +89,9 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
     try {
       if (isFav) {
         await _repository.removeFromWishlist(courseId);
-        final updated =
-            state.items.where((it) => it.courseId != courseId && it.course.id != courseId).toList();
+        final updated = state.items
+            .where((it) => it.courseId != courseId && it.course.id != courseId)
+            .toList();
         state = state.copyWith(items: updated);
         return false;
       } else {
@@ -100,9 +103,15 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
       rethrow;
     }
   }
+
+  /// Clears the visible hearts before a different account can render them.
+  void clear() {
+    state = const WishlistState(items: [], isLoading: false);
+  }
 }
 
-final wishlistProvider =
-    StateNotifierProvider<WishlistNotifier, WishlistState>((ref) {
-  return WishlistNotifier(ref.watch(wishlistRepositoryProvider));
-});
+final wishlistProvider = StateNotifierProvider<WishlistNotifier, WishlistState>(
+  (ref) {
+    return WishlistNotifier(ref.watch(wishlistRepositoryProvider));
+  },
+);

@@ -11,6 +11,8 @@ import '../../core/widgets/star_rating.dart';
 import '../courses/models/catalog_models.dart';
 import '../courses/providers/catalog_provider.dart';
 import '../cart/providers/cart_provider.dart';
+import '../auth/providers/auth_provider.dart';
+import '../library/providers/library_provider.dart';
 import '../reviews/widgets/course_reviews_section.dart';
 import '../wishlist/providers/wishlist_provider.dart';
 
@@ -37,8 +39,11 @@ class CourseDetailScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline,
-                    size: 48, color: AppTheme.error),
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppTheme.error,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Không tìm thấy khóa học',
@@ -92,7 +97,8 @@ class _CourseDetailBody extends ConsumerWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
-                    maxWidth: Breakpoint.maxContentWidth),
+                  maxWidth: Breakpoint.maxContentWidth,
+                ),
                 child: isMobile
                     ? _MobileLayout(course: course, asyncRecs: asyncRecs)
                     : _DesktopLayout(course: course, asyncRecs: asyncRecs),
@@ -123,8 +129,9 @@ class _CourseHero extends StatelessWidget {
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+          constraints: const BoxConstraints(
+            maxWidth: Breakpoint.maxContentWidth,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -138,24 +145,32 @@ class _CourseHero extends StatelessWidget {
                       children: [
                         GestureDetector(
                           onTap: () => context.go('/khoa-hoc'),
-                          child: const Text('Khóa học',
-                              style: TextStyle(
-                                  color: Color(0xFF94A3B8), fontSize: 13)),
+                          child: const Text(
+                            'Khóa học',
+                            style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                         if (course.category != null) ...[
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 6),
-                            child: Text('/',
-                                style: TextStyle(
-                                    color: Color(0xFF64748B))),
+                            child: Text(
+                              '/',
+                              style: TextStyle(color: Color(0xFF64748B)),
+                            ),
                           ),
                           GestureDetector(
-                            onTap: () => context
-                                .go('/danh-muc/${course.category!.slug}'),
+                            onTap: () => context.go(
+                              '/danh-muc/${course.category!.slug}',
+                            ),
                             child: Text(
                               course.category!.name,
                               style: const TextStyle(
-                                  color: Color(0xFF94A3B8), fontSize: 13),
+                                color: Color(0xFF94A3B8),
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -177,20 +192,32 @@ class _CourseHero extends StatelessWidget {
                       Text(
                         course.shortDescription!,
                         style: const TextStyle(
-                            color: Color(0xFFCBD5E1), fontSize: 15, height: 1.5),
+                          color: Color(0xFFCBD5E1),
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
                       ),
                     const SizedBox(height: 16),
                     // Rating + enrollment
                     Row(
                       children: [
-                        StarRating(rating: course.ratingAverage, count: course.ratingCount),
+                        StarRating(
+                          rating: course.ratingAverage,
+                          count: course.ratingCount,
+                        ),
                         const SizedBox(width: 16),
-                        const Icon(Icons.people_outline, size: 15, color: Color(0xFF94A3B8)),
+                        const Icon(
+                          Icons.people_outline,
+                          size: 15,
+                          color: Color(0xFF94A3B8),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${course.enrollmentCount} học viên',
                           style: const TextStyle(
-                              color: Color(0xFF94A3B8), fontSize: 13),
+                            color: Color(0xFF94A3B8),
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -198,12 +225,18 @@ class _CourseHero extends StatelessWidget {
                     // Instructor
                     Row(
                       children: [
-                        const Icon(Icons.person_outline, size: 15, color: Color(0xFF94A3B8)),
+                        const Icon(
+                          Icons.person_outline,
+                          size: 15,
+                          color: Color(0xFF94A3B8),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           course.instructorName,
                           style: const TextStyle(
-                              color: Color(0xFF94A3B8), fontSize: 13),
+                            color: Color(0xFF94A3B8),
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         _LevelPill(level: course.level),
@@ -215,10 +248,7 @@ class _CourseHero extends StatelessWidget {
               if (!isMobile) ...[
                 const SizedBox(width: 32),
                 // Sticky buy card (desktop)
-                SizedBox(
-                  width: 300,
-                  child: _BuyCard(course: course),
-                ),
+                SizedBox(width: 300, child: _BuyCard(course: course)),
               ],
             ],
           ),
@@ -308,7 +338,8 @@ class _CourseContent extends StatelessWidget {
               itemCount: course.lessons.length,
               separatorBuilder: (context, _) =>
                   const Divider(height: 0, indent: 16, endIndent: 16),
-              itemBuilder: (context, i) => _LessonTile(lesson: course.lessons[i]),
+              itemBuilder: (context, i) =>
+                  _LessonTile(lesson: course.lessons[i]),
             ),
           ),
           const SizedBox(height: 32),
@@ -331,8 +362,10 @@ class _CourseContent extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Khóa học liên quan',
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Khóa học liên quan',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 340,
@@ -340,8 +373,10 @@ class _CourseContent extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: recs.length,
                     separatorBuilder: (context, _) => const SizedBox(width: 16),
-                    itemBuilder: (context, i) =>
-                        SizedBox(width: 230, child: CourseCard(course: recs[i])),
+                    itemBuilder: (context, i) => SizedBox(
+                      width: 230,
+                      child: CourseCard(course: recs[i]),
+                    ),
                   ),
                 ),
               ],
@@ -384,13 +419,17 @@ class _LessonTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: lesson.isPreview ? AppTheme.primary : AppTheme.onSurfaceVariant,
+              color: lesson.isPreview
+                  ? AppTheme.primary
+                  : AppTheme.onSurfaceVariant,
             ),
           ),
         ),
       ),
-      title: Text(lesson.title,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+      title: Text(
+        lesson.title,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -401,17 +440,24 @@ class _LessonTile extends StatelessWidget {
                 color: AppTheme.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('Xem thử',
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: AppTheme.success,
-                      fontWeight: FontWeight.w600)),
+              child: const Text(
+                'Xem thử',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           const SizedBox(width: 8),
           if (lesson.durationSec != null)
-            Text(_fmtDuration(lesson.durationSec),
-                style: const TextStyle(
-                    fontSize: 12, color: AppTheme.onSurfaceVariant)),
+            Text(
+              _fmtDuration(lesson.durationSec),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.onSurfaceVariant,
+              ),
+            ),
         ],
       ),
     );
@@ -427,21 +473,27 @@ class _BuyCard extends ConsumerWidget {
   String _fmtPrice(double p) {
     final n = p.toInt();
     return n.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+$)'),
-          (m) => '${m[1]}.',
-        );
+      RegExp(r'(\d)(?=(\d{3})+$)'),
+      (m) => '${m[1]}.',
+    );
   }
 
   Future<void> _addToCart(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(cartProvider.notifier).addToCart(course.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
           SnackBar(
-            content: const Text('Đã thêm khóa học vào giỏ hàng!'),
+            content: const Text('Đã thêm khóa học vào giỏ hàng'),
+            duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'Xem giỏ hàng',
-              onPressed: () => context.go('/cart'),
+              onPressed: () {
+                messenger.hideCurrentSnackBar();
+                if (context.mounted) context.go('/cart');
+              },
             ),
           ),
         );
@@ -460,6 +512,17 @@ class _BuyCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAuthenticated = ref.watch(authProvider).isAuthenticated;
+    final isOwned =
+        isAuthenticated &&
+        (ref
+                .watch(libraryProvider)
+                .valueOrNull
+                ?.any(
+                  (entitlement) =>
+                      entitlement.courseId == course.id && entitlement.isActive,
+                ) ??
+            false);
     return Card(
       elevation: 4,
       shadowColor: Colors.black.withValues(alpha: 0.1),
@@ -470,16 +533,22 @@ class _BuyCard extends ConsumerWidget {
           children: [
             // Price
             if (course.isFree)
-              const Text('Miễn phí',
-                  style: TextStyle(
-                      fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.success))
+              const Text(
+                'Miễn phí',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.success,
+                ),
+              )
             else ...[
               Text(
                 '${_fmtPrice(course.effectivePrice)}₫',
                 style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.primary),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.primary,
+                ),
               ),
               if (course.isOnSale)
                 Row(
@@ -487,14 +556,17 @@ class _BuyCard extends ConsumerWidget {
                     Text(
                       '${_fmtPrice(course.price)}₫',
                       style: const TextStyle(
-                          fontSize: 14,
-                          decoration: TextDecoration.lineThrough,
-                          color: AppTheme.onSurfaceVariant),
+                        fontSize: 14,
+                        decoration: TextDecoration.lineThrough,
+                        color: AppTheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.accent,
                         borderRadius: BorderRadius.circular(4),
@@ -502,9 +574,10 @@ class _BuyCard extends ConsumerWidget {
                       child: Text(
                         '-${(((course.price - course.salePrice!) / course.price) * 100).round()}%',
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700),
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -514,20 +587,35 @@ class _BuyCard extends ConsumerWidget {
             // CTA
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
-                onPressed: () => _addToCart(context, ref),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('Thêm vào giỏ hàng',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              ),
+              child: isOwned
+                  ? FilledButton.icon(
+                      onPressed: () => context.go('/library'),
+                      icon: const Icon(Icons.school_outlined),
+                      label: const Text('Vào thư viện'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    )
+                  : FilledButton(
+                      onPressed: () => _addToCart(context, ref),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        'Thêm vào giỏ hàng',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
             ),
             const SizedBox(height: 8),
             Builder(
               builder: (context) {
-                final isInWishlist =
-                    ref.watch(wishlistProvider).containsCourse(course.id);
+                final isInWishlist = ref
+                    .watch(wishlistProvider)
+                    .containsCourse(course.id);
                 return SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -539,9 +627,11 @@ class _BuyCard extends ConsumerWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(added
-                                  ? 'Đã thêm khóa học vào danh sách yêu thích!'
-                                  : 'Đã xóa khóa học khỏi danh sách yêu thích!'),
+                              content: Text(
+                                added
+                                    ? 'Đã thêm khóa học vào danh sách yêu thích!'
+                                    : 'Đã xóa khóa học khỏi danh sách yêu thích!',
+                              ),
                               action: SnackBarAction(
                                 label: 'Xem yêu thích',
                                 onPressed: () => context.go('/wishlist'),
@@ -568,19 +658,29 @@ class _BuyCard extends ConsumerWidget {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    label: Text(isInWishlist ? 'Đã lưu yêu thích' : 'Thêm vào yêu thích'),
+                    label: Text(
+                      isInWishlist ? 'Đã lưu yêu thích' : 'Thêm vào yêu thích',
+                    ),
                   ),
                 );
               },
             ),
             const SizedBox(height: 16),
             // Stats
-            _StatRow(icon: Icons.book_outlined, label: '${course.lessons.length} bài học'),
+            _StatRow(
+              icon: Icons.book_outlined,
+              label: '${course.lessons.length} bài học',
+            ),
             if (course.durationSec != null)
               _StatRow(
-                  icon: Icons.access_time,
-                  label: '${(course.durationSec! ~/ 3600)}h ${(course.durationSec! % 3600 ~/ 60)}m'),
-            _StatRow(icon: Icons.workspace_premium_outlined, label: 'Chứng chỉ hoàn thành'),
+                icon: Icons.access_time,
+                label:
+                    '${(course.durationSec! ~/ 3600)}h ${(course.durationSec! % 3600 ~/ 60)}m',
+              ),
+            _StatRow(
+              icon: Icons.workspace_premium_outlined,
+              label: 'Chứng chỉ hoàn thành',
+            ),
             _StatRow(icon: Icons.download_outlined, label: 'Tài liệu tải về'),
           ],
         ),
@@ -602,8 +702,10 @@ class _StatRow extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: AppTheme.onSurfaceVariant),
           const SizedBox(width: 8),
-          Text(label,
-              style: const TextStyle(fontSize: 13, color: AppTheme.onSurface)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: AppTheme.onSurface),
+          ),
         ],
       ),
     );
@@ -631,7 +733,10 @@ class _LevelPill extends StatelessWidget {
       child: Text(
         _map[level] ?? level,
         style: const TextStyle(
-            color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600),
+          color: Color(0xFF94A3B8),
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

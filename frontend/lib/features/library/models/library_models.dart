@@ -46,15 +46,15 @@ class LibraryLesson {
   final bool isRequired;
 
   factory LibraryLesson.fromJson(Map<String, dynamic> json) => LibraryLesson(
-        id: json['id'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        position: json['position'] as int? ?? 0,
-        content: json['content'] as String?,
-        videoUrl: json['videoUrl'] as String?,
-        durationSec: json['durationSec'] as int?,
-        isPreview: json['isPreview'] as bool? ?? false,
-        isRequired: json['isRequired'] as bool? ?? true,
-      );
+    id: json['id'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    position: json['position'] as int? ?? 0,
+    content: json['content'] as String?,
+    videoUrl: json['videoUrl'] as String?,
+    durationSec: json['durationSec'] as int?,
+    isPreview: json['isPreview'] as bool? ?? false,
+    isRequired: json['isRequired'] as bool? ?? true,
+  );
 }
 
 // ── Course file ───────────────────────────────────────────────────────────────
@@ -88,7 +88,8 @@ class CourseFileModel {
 
   String get formattedSize {
     if (sizeBytes < 1024) return '$sizeBytes B';
-    if (sizeBytes < 1024 * 1024) return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
+    if (sizeBytes < 1024 * 1024)
+      return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
     return '${(sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
@@ -134,7 +135,8 @@ class LibraryCourseDetail {
         thumbnailUrl: json['thumbnailUrl'] as String?,
         category: json['category'] != null
             ? LibraryCategoryModel.fromJson(
-                json['category'] as Map<String, dynamic>)
+                json['category'] as Map<String, dynamic>,
+              )
             : null,
         lessons: (json['lessons'] as List<dynamic>? ?? [])
             .map((e) => LibraryLesson.fromJson(e as Map<String, dynamic>))
@@ -182,9 +184,41 @@ class LibraryCourseSummary {
         thumbnailUrl: json['thumbnailUrl'] as String?,
         category: json['category'] != null
             ? LibraryCategoryModel.fromJson(
-                json['category'] as Map<String, dynamic>)
+                json['category'] as Map<String, dynamic>,
+              )
             : null,
       );
+}
+
+// ── Entitlement progress summary ─────────────────────────────────────────────
+
+class EntitlementProgress {
+  const EntitlementProgress({
+    required this.completedLessons,
+    required this.totalLessons,
+    required this.percentage,
+    required this.isComplete,
+  });
+
+  final int completedLessons;
+  final int totalLessons;
+  final int percentage;
+  final bool isComplete;
+
+  factory EntitlementProgress.fromJson(Map<String, dynamic> json) =>
+      EntitlementProgress(
+        completedLessons: (json['completedLessons'] as num?)?.toInt() ?? 0,
+        totalLessons: (json['totalLessons'] as num?)?.toInt() ?? 0,
+        percentage: (json['percentage'] as num?)?.toInt() ?? 0,
+        isComplete: json['isComplete'] as bool? ?? false,
+      );
+
+  static const zero = EntitlementProgress(
+    completedLessons: 0,
+    totalLessons: 0,
+    percentage: 0,
+    isComplete: false,
+  );
 }
 
 // ── Entitlement ───────────────────────────────────────────────────────────────
@@ -196,6 +230,7 @@ class EntitlementModel {
     required this.status,
     required this.grantedAt,
     required this.course,
+    required this.progress,
     this.revokedAt,
     this.revokeReason,
   });
@@ -207,6 +242,7 @@ class EntitlementModel {
   final String? revokedAt;
   final String? revokeReason;
   final LibraryCourseSummary course;
+  final EntitlementProgress progress;
 
   bool get isActive => status == 'ACTIVE';
   bool get isRevoked => status == 'REVOKED';
@@ -220,7 +256,13 @@ class EntitlementModel {
         revokedAt: json['revokedAt'] as String?,
         revokeReason: json['revokeReason'] as String?,
         course: LibraryCourseSummary.fromJson(
-            json['course'] as Map<String, dynamic>? ?? {}),
+          json['course'] as Map<String, dynamic>? ?? {},
+        ),
+        progress: json['progress'] != null
+            ? EntitlementProgress.fromJson(
+                json['progress'] as Map<String, dynamic>,
+              )
+            : EntitlementProgress.zero,
       );
 }
 
@@ -286,7 +328,8 @@ class DownloadTokenResponse {
   factory DownloadTokenResponse.fromJson(Map<String, dynamic> json) =>
       DownloadTokenResponse(
         downloadUrl: json['downloadUrl'] as String? ?? '',
-        expiresAt: DateTime.tryParse(json['expiresAt'] as String? ?? '') ??
+        expiresAt:
+            DateTime.tryParse(json['expiresAt'] as String? ?? '') ??
             DateTime.now().add(const Duration(minutes: 10)),
         maxDownloads: (json['maxDownloads'] as num?)?.toInt() ?? 1,
       );
@@ -321,4 +364,3 @@ class LessonCompletionResult {
     );
   }
 }
-

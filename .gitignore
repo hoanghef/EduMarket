@@ -38,3 +38,6 @@ playwright-report/
 .tmp-flutter-appdata/
 .vscode/
 .idea/
+
+# ── Submission staging (generated, never commit) ────────────────────────────
+_submission/

@@ -108,4 +108,12 @@ test('customer can get, add to, and remove their own cart; duplicate and unavail
   const owned = await request('/api/cart/items', { method: 'POST', headers: writeHeaders(session), body: JSON.stringify({ courseId: courses[1].id }) });
   assert.equal(owned.response.status, 409);
   assert.equal(owned.body.code, 'COURSE_ALREADY_OWNED');
+
+  // A course can become owned after it was put in a cart by a payment/admin
+  // action. Loading the cart must remove that stale item before checkout.
+  const cart = await prisma.cart.findUnique({ where: { userId }, select: { id: true } });
+  await prisma.cartItem.create({ data: { cartId: cart.id, courseId: courses[1].id } });
+  const cleaned = await request('/api/cart', { headers: { Cookie: session.cookie } });
+  assert.equal(cleaned.response.status, 200);
+  assert.equal(cleaned.body.data.cart.items.some((item) => item.courseId === courses[1].id), false);
 });

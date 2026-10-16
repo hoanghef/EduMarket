@@ -8,6 +8,7 @@ const { clearSessionCookie, issueCsrfToken, issueSessionCookie } = require('../l
 const { requireAuth } = require('../middleware/auth');
 
 const router = Router();
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
 const PASSWORD_ROUNDS = 12;
 
@@ -90,19 +91,37 @@ router.post('/login', loginLimiter, async (req, res, next) => {
       await audit(user.id, 'LOGIN_FAILED', req, { reason: 'ACCOUNT_DISABLED' });
       return res.status(403).json({ success: false, code: 'ACCOUNT_DISABLED', message: 'Account is disabled.' });
     }
-    if (user.lockedUntil && user.lockedUntil > new Date()) {
+    const now = new Date();
+    if (user.lockedUntil && user.lockedUntil > now) {
       await audit(user.id, 'LOGIN_FAILED', req, { reason: 'ACCOUNT_LOCKED' });
-      return res.status(423).json({ success: false, code: 'ACCOUNT_LOCKED', message: 'Account is temporarily locked.' });
+      return res.status(423).json({ success: false, code: 'ACCOUNT_LOCKED', message: 'Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.' });
+    }
+
+    // A completed lockout starts a fresh series of attempts.  Without this
+    // reset, the first bad password after expiry would immediately lock the
+    // account again because the stored counter is still at the threshold.
+    let failedLoginAttempts = user.failedLoginAttempts;
+    if (user.lockedUntil) {
+      failedLoginAttempts = 0;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: 0, lockedUntil: null },
+      });
     }
 
     const passwordMatches = await bcrypt.compare(credentials.password, user.passwordHash);
     if (!passwordMatches) {
-      const failedLoginAttempts = user.failedLoginAttempts + 1;
-      const lockedUntil = failedLoginAttempts >= 5 ? new Date(Date.now() + LOCKOUT_MS) : null;
+      failedLoginAttempts += 1;
+      const lockedUntil = failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS
+        ? new Date(Date.now() + LOCKOUT_MS)
+        : null;
       await prisma.user.update({ where: { id: user.id }, data: { failedLoginAttempts, lockedUntil } });
       await audit(user.id, 'LOGIN_FAILED', req, { reason: 'INVALID_CREDENTIALS', failedLoginAttempts });
+      if (lockedUntil) {
+        await audit(user.id, 'ACCOUNT_LOCKED', req, { failedLoginAttempts, lockedUntil: lockedUntil.toISOString() });
+      }
       const status = lockedUntil ? 423 : 401;
-      return res.status(status).json({ success: false, code: lockedUntil ? 'ACCOUNT_LOCKED' : 'INVALID_CREDENTIALS', message: lockedUntil ? 'Account is temporarily locked.' : 'Invalid email or password.' });
+      return res.status(status).json({ success: false, code: lockedUntil ? 'ACCOUNT_LOCKED' : 'INVALID_CREDENTIALS', message: lockedUntil ? 'Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.' : 'Invalid email or password.' });
     }
 
     const authenticatedUser = await prisma.user.update({

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/cart/providers/cart_provider.dart';
 
 /// Breakpoints for responsive layout.
 abstract final class Breakpoint {
@@ -89,10 +90,7 @@ class _AppShellState extends State<AppShell>
         children: [
           const _Navbar(),
           Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: widget.child,
-            ),
+            child: FadeTransition(opacity: _fadeAnim, child: widget.child),
           ),
           const _Footer(),
         ],
@@ -113,6 +111,33 @@ class _Navbar extends ConsumerStatefulWidget {
 class _NavbarState extends ConsumerState<_Navbar> {
   bool _menuOpen = false;
 
+  Future<void> _requestLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Đăng xuất'),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi EduMarket không?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _menuOpen = false);
+    await ref.read(authProvider.notifier).logout();
+    if (mounted) context.go('/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -120,8 +145,9 @@ class _NavbarState extends ConsumerState<_Navbar> {
     final isLoggedIn = authState.isAuthenticated && user != null;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < Breakpoint.tablet;
-    final showSearchBar =
-        !isLoggedIn ? screenWidth >= 1200 : screenWidth >= 1500;
+    final showSearchBar = !isLoggedIn
+        ? screenWidth >= 1200
+        : screenWidth >= 1500;
 
     return Material(
       color: Colors.white,
@@ -131,7 +157,8 @@ class _NavbarState extends ConsumerState<_Navbar> {
           Container(
             height: 64,
             padding: EdgeInsets.symmetric(
-                horizontal: Breakpoint.pagePadding(context)),
+              horizontal: Breakpoint.pagePadding(context),
+            ),
             decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(bottom: BorderSide(color: AppTheme.divider)),
@@ -153,8 +180,11 @@ class _NavbarState extends ConsumerState<_Navbar> {
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.school_rounded,
-                            color: Colors.white, size: 18),
+                        child: const Icon(
+                          Icons.school_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       const Text(
@@ -187,29 +217,32 @@ class _NavbarState extends ConsumerState<_Navbar> {
                     onPressed: () => context.go('/wishlist'),
                   ),
                   // Cart button
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart_outlined, size: 20),
-                    tooltip: 'Giỏ hàng',
-                    onPressed: () => context.go('/cart'),
-                  ),
+                  _CartIconButton(isLarge: false),
                   if (isLoggedIn) ...[
                     const SizedBox(width: 2),
                     TextButton.icon(
                       onPressed: () => context.go('/library'),
                       icon: const Icon(Icons.library_books_outlined, size: 16),
-                      label: const Text('Thư viện',
-                          style: TextStyle(fontSize: 13)),
+                      label: const Text(
+                        'Thư viện',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
                     IconButton(
                       tooltip: 'Chứng chỉ',
-                      icon: const Icon(Icons.workspace_premium_outlined, size: 20),
+                      icon: const Icon(
+                        Icons.workspace_premium_outlined,
+                        size: 20,
+                      ),
                       onPressed: () => context.go('/certificates'),
                     ),
                     TextButton.icon(
                       onPressed: () => context.go('/account/orders'),
                       icon: const Icon(Icons.receipt_long_outlined, size: 16),
-                      label: const Text('Đơn hàng',
-                          style: TextStyle(fontSize: 13)),
+                      label: const Text(
+                        'Đơn hàng',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
                     if (user.isAdmin) ...[
                       const SizedBox(width: 2),
@@ -217,7 +250,9 @@ class _NavbarState extends ConsumerState<_Navbar> {
                         onPressed: () => context.go('/admin'),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 6),
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -233,13 +268,17 @@ class _NavbarState extends ConsumerState<_Navbar> {
                     _UserAvatarChip(name: user.fullName),
                     const SizedBox(width: 4),
                     OutlinedButton(
-                      onPressed: () => ref.read(authProvider.notifier).logout(),
+                      onPressed: authState.isLoading ? null : _requestLogout,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
-                      child: const Text('Đăng xuất',
-                          style: TextStyle(fontSize: 13)),
+                      child: const Text(
+                        'Đăng xuất',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
                   ] else ...[
                     const SizedBox(width: 4),
@@ -260,11 +299,7 @@ class _NavbarState extends ConsumerState<_Navbar> {
                     tooltip: 'Yêu thích',
                     onPressed: () => context.go('/wishlist'),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart_outlined, size: 22),
-                    tooltip: 'Giỏ hàng',
-                    onPressed: () => context.go('/cart'),
-                  ),
+                  _CartIconButton(isLarge: true),
                   IconButton(
                     icon: Icon(_menuOpen ? Icons.close : Icons.menu),
                     onPressed: () => setState(() => _menuOpen = !_menuOpen),
@@ -326,22 +361,25 @@ class _NavbarState extends ConsumerState<_Navbar> {
                     const SizedBox(height: 8),
                     const Divider(),
                     ListTile(
-                      leading: const Icon(Icons.account_circle,
-                          color: AppTheme.primary),
-                      title: Text(user.fullName,
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle:
-                          Text(user.email, style: const TextStyle(fontSize: 12)),
+                      leading: const Icon(
+                        Icons.account_circle,
+                        color: AppTheme.primary,
+                      ),
+                      title: Text(
+                        user.fullName,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        user.email,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       dense: true,
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
-                        onPressed: () {
-                          setState(() => _menuOpen = false);
-                          ref.read(authProvider.notifier).logout();
-                        },
+                        onPressed: authState.isLoading ? null : _requestLogout,
                         child: const Text('Đăng xuất'),
                       ),
                     ),
@@ -399,7 +437,8 @@ class _NavLinkState extends State<_NavLink> {
     try {
       location = GoRouterState.of(context).matchedLocation;
     } catch (_) {}
-    final isActive = location == widget.path ||
+    final isActive =
+        location == widget.path ||
         (widget.path != '/' && location.startsWith(widget.path));
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -451,9 +490,11 @@ class _MobileNavLink extends StatelessWidget {
 
     return ListTile(
       leading: icon != null
-          ? Icon(icon,
+          ? Icon(
+              icon,
               size: 20,
-              color: isActive ? AppTheme.primary : AppTheme.onSurfaceVariant)
+              color: isActive ? AppTheme.primary : AppTheme.onSurfaceVariant,
+            )
           : null,
       title: Text(
         label,
@@ -552,6 +593,34 @@ class _UserAvatarChip extends StatelessWidget {
   }
 }
 
+// ── Cart icon with badge ──────────────────────────────────────────────────────
+
+class _CartIconButton extends ConsumerWidget {
+  const _CartIconButton({required this.isLarge});
+  final bool isLarge;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cartAsync = ref.watch(cartProvider);
+    final itemCount = cartAsync.valueOrNull?.items.length ?? 0;
+    final iconSize = isLarge ? 22.0 : 20.0;
+
+    return IconButton(
+      tooltip: 'Giỏ hàng',
+      onPressed: () => context.go('/cart'),
+      icon: itemCount > 0
+          ? Badge(
+              label: Text(
+                itemCount > 99 ? '99+' : '$itemCount',
+                style: const TextStyle(fontSize: 9),
+              ),
+              child: Icon(Icons.shopping_cart_outlined, size: iconSize),
+            )
+          : Icon(Icons.shopping_cart_outlined, size: iconSize),
+    );
+  }
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 class _Footer extends StatelessWidget {
@@ -568,8 +637,9 @@ class _Footer extends StatelessWidget {
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+          constraints: const BoxConstraints(
+            maxWidth: Breakpoint.maxContentWidth,
+          ),
           child: Breakpoint.isMobile(context)
               ? const _FooterMobile()
               : const _FooterDesktop(),
@@ -606,16 +676,20 @@ class _FooterDesktop extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.school_rounded,
-                            color: Colors.white, size: 15),
+                        child: const Icon(
+                          Icons.school_rounded,
+                          color: Colors.white,
+                          size: 15,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       const Text(
                         'EduMarket',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
                       ),
                     ],
                   ),
@@ -623,7 +697,10 @@ class _FooterDesktop extends StatelessWidget {
                   const Text(
                     'Nền tảng học trực tuyến hàng đầu\ncho người học Việt Nam.',
                     style: TextStyle(
-                        color: Color(0xFF94A3B8), fontSize: 12, height: 1.5),
+                      color: Color(0xFF94A3B8),
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),
@@ -707,16 +784,20 @@ class _FooterMobile extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(5),
               ),
-              child: const Icon(Icons.school_rounded,
-                  color: Colors.white, size: 13),
+              child: const Icon(
+                Icons.school_rounded,
+                color: Colors.white,
+                size: 13,
+              ),
             ),
             const SizedBox(width: 6),
             const Text(
               'EduMarket',
               style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15),
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
             ),
           ],
         ),
@@ -739,7 +820,9 @@ class _FooterMobile extends StatelessWidget {
             _FooterMobileLink(label: 'Hoàn tiền', path: '/chinh-sach/refunds'),
             _FooterMobileLink(label: 'Bảo mật', path: '/chinh-sach/privacy'),
             _FooterMobileLink(
-                label: 'Xác thực chứng chỉ', path: '/certificates/verify'),
+              label: 'Xác thực chứng chỉ',
+              path: '/certificates/verify',
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -789,7 +872,10 @@ class _FooterColumn extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
         const SizedBox(height: 8),
         ...links.map((l) => _FooterLinkItem(label: l.$1, path: l.$2)),

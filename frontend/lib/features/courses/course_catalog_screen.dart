@@ -16,38 +16,67 @@ class CourseCatalogScreen extends ConsumerStatefulWidget {
     super.key,
     this.initialQ,
     this.initialCategory,
+    this.initialLevel,
+    this.initialMinPrice,
+    this.initialMaxPrice,
     this.initialSort,
+    this.initialPage,
   });
 
   final String? initialQ;
   final String? initialCategory;
+  final String? initialLevel;
+  final double? initialMinPrice;
+  final double? initialMaxPrice;
   final String? initialSort;
+  final int? initialPage;
 
   @override
   ConsumerState<CourseCatalogScreen> createState() =>
       _CourseCatalogScreenState();
 }
 
-class _CourseCatalogScreenState
-    extends ConsumerState<CourseCatalogScreen> {
+class _CourseCatalogScreenState extends ConsumerState<CourseCatalogScreen> {
   late final TextEditingController _searchCtrl;
   bool _filtersOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _searchCtrl =
-        TextEditingController(text: widget.initialQ ?? '');
+    _searchCtrl = TextEditingController(text: widget.initialQ ?? '');
 
-    // Initialise filter from URL params (once, on first build).
+    // Initialise filter from URL params.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(catalogFilterProvider.notifier).state = CatalogFilter(
-        q: widget.initialQ,
-        category: widget.initialCategory,
-        sort: widget.initialSort ?? 'newest',
-        page: 1,
-      );
+      if (mounted) _setFilterFromRoute();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant CourseCatalogScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialQ != widget.initialQ ||
+        oldWidget.initialCategory != widget.initialCategory ||
+        oldWidget.initialLevel != widget.initialLevel ||
+        oldWidget.initialMinPrice != widget.initialMinPrice ||
+        oldWidget.initialMaxPrice != widget.initialMaxPrice ||
+        oldWidget.initialSort != widget.initialSort ||
+        oldWidget.initialPage != widget.initialPage) {
+      _searchCtrl.text = widget.initialQ ?? '';
+      _setFilterFromRoute();
+    }
+  }
+
+  void _setFilterFromRoute() {
+    final query = widget.initialQ?.trim();
+    ref.read(catalogFilterProvider.notifier).state = CatalogFilter(
+      q: (query?.isEmpty ?? true) ? null : query,
+      category: widget.initialCategory,
+      level: widget.initialLevel,
+      minPrice: widget.initialMinPrice,
+      maxPrice: widget.initialMaxPrice,
+      sort: widget.initialSort ?? 'newest',
+      page: (widget.initialPage ?? 1) < 1 ? 1 : widget.initialPage!,
+    );
   }
 
   @override
@@ -81,22 +110,24 @@ class _CourseCatalogScreenState
           ),
           child: Center(
             child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+              constraints: const BoxConstraints(
+                maxWidth: Breakpoint.maxContentWidth,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Title ──────────────────────────────────────────────────
-                  Text('Tất cả khóa học',
-                      style: Theme.of(context).textTheme.headlineMedium),
+                  Text(
+                    'Tất cả khóa học',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
                   const SizedBox(height: 4),
                   asyncCourses.maybeWhen(
                     data: (p) => Text(
                       '${p.pagination.total} khóa học',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: AppTheme.onSurfaceVariant),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.onSurfaceVariant,
+                      ),
                     ),
                     orElse: () => const SizedBox.shrink(),
                   ),
@@ -105,7 +136,16 @@ class _CourseCatalogScreenState
                   // ── Search + Controls bar ──────────────────────────────────
                   _SearchBar(
                     controller: _searchCtrl,
-                    onSearch: (q) => _applyFilter(filter.copyWith(q: q, clearQ: q.isEmpty, page: 1)),
+                    onSearch: (q) {
+                      final keyword = q.trim();
+                      _applyFilter(
+                        filter.copyWith(
+                          q: keyword,
+                          clearQ: keyword.isEmpty,
+                          page: 1,
+                        ),
+                      );
+                    },
                     onToggleFilters: isMobile
                         ? () => setState(() => _filtersOpen = !_filtersOpen)
                         : null,
@@ -125,8 +165,11 @@ class _CourseCatalogScreenState
                         SizedBox(
                           width: 220,
                           child: _FilterSidebar(
+                            key: ValueKey(filter),
                             categories: asyncCats.maybeWhen(
-                                data: (c) => c, orElse: () => []),
+                              data: (c) => c,
+                              orElse: () => [],
+                            ),
                             filter: filter,
                             onFilterChanged: (f) => _applyFilter(f),
                           ),
@@ -141,6 +184,8 @@ class _CourseCatalogScreenState
                             onPageChanged: (p) =>
                                 _applyFilter(filter.copyWith(page: p)),
                             onRetry: () => ref.invalidate(coursesProvider),
+                            onClearFilters: () =>
+                                _applyFilter(const CatalogFilter(page: 1)),
                           ),
                         ),
                       ],
@@ -149,8 +194,11 @@ class _CourseCatalogScreenState
                     // Mobile: filters in collapsible panel
                     if (_filtersOpen)
                       _FilterSidebar(
+                        key: ValueKey(filter),
                         categories: asyncCats.maybeWhen(
-                            data: (c) => c, orElse: () => []),
+                          data: (c) => c,
+                          orElse: () => [],
+                        ),
                         filter: filter,
                         onFilterChanged: (f) {
                           _applyFilter(f);
@@ -164,6 +212,8 @@ class _CourseCatalogScreenState
                       onPageChanged: (p) =>
                           _applyFilter(filter.copyWith(page: p)),
                       onRetry: () => ref.invalidate(coursesProvider),
+                      onClearFilters: () =>
+                          _applyFilter(const CatalogFilter(page: 1)),
                     ),
                   ],
                 ],
@@ -182,6 +232,8 @@ class _CourseCatalogScreenState
     if (f.q != null && f.q!.isNotEmpty) params['q'] = f.q!;
     if (f.category != null) params['category'] = f.category!;
     if (f.level != null) params['level'] = f.level!;
+    if (f.minPrice != null) params['minPrice'] = '${f.minPrice!}';
+    if (f.maxPrice != null) params['maxPrice'] = '${f.maxPrice!}';
     if (f.sort != 'newest') params['sort'] = f.sort;
     if (f.page > 1) params['page'] = '${f.page}';
     final query = params.entries
@@ -227,7 +279,9 @@ class _SearchBar extends StatelessWidget {
             padding: const EdgeInsets.only(right: 8),
             child: OutlinedButton.icon(
               onPressed: onToggleFilters,
-              icon: Icon(filtersOpen ? Icons.filter_list_off : Icons.filter_list),
+              icon: Icon(
+                filtersOpen ? Icons.filter_list_off : Icons.filter_list,
+              ),
               label: const Text('Lọc'),
             ),
           ),
@@ -248,11 +302,12 @@ class _SearchBar extends StatelessWidget {
             value: filter.sort,
             borderRadius: BorderRadius.circular(8),
             items: _sorts
-                .map((s) => DropdownMenuItem(
-                      value: s.$1,
-                      child: Text(s.$2,
-                          style: const TextStyle(fontSize: 13)),
-                    ))
+                .map(
+                  (s) => DropdownMenuItem(
+                    value: s.$1,
+                    child: Text(s.$2, style: const TextStyle(fontSize: 13)),
+                  ),
+                )
                 .toList(),
             onChanged: (v) => onSortChanged(v ?? 'newest'),
           ),
@@ -266,6 +321,7 @@ class _SearchBar extends StatelessWidget {
 
 class _FilterSidebar extends StatefulWidget {
   const _FilterSidebar({
+    super.key,
     required this.categories,
     required this.filter,
     required this.onFilterChanged,
@@ -287,9 +343,11 @@ class _FilterSidebarState extends State<_FilterSidebar> {
   void initState() {
     super.initState();
     _minCtrl = TextEditingController(
-        text: widget.filter.minPrice?.toStringAsFixed(0) ?? '');
+      text: widget.filter.minPrice?.toStringAsFixed(0) ?? '',
+    );
     _maxCtrl = TextEditingController(
-        text: widget.filter.maxPrice?.toStringAsFixed(0) ?? '');
+      text: widget.filter.maxPrice?.toStringAsFixed(0) ?? '',
+    );
   }
 
   @override
@@ -311,52 +369,64 @@ class _FilterSidebarState extends State<_FilterSidebar> {
             // Reset
             Row(
               children: [
-                const Text('Bộ lọc',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                const Text(
+                  'Bộ lọc',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => widget.onFilterChanged(
-                      const CatalogFilter(page: 1)),
+                  onPressed: () =>
+                      widget.onFilterChanged(const CatalogFilter(page: 1)),
                   child: const Text('Xóa tất cả'),
                 ),
               ],
             ),
             const Divider(),
             // ── Category ─────────────────────────────────────────────────────
-            const Text('Danh mục',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const Text(
+              'Danh mục',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
             const SizedBox(height: 8),
-            ...widget.categories.map((c) => _FilterRadio(
-                  label: c.name,
-                  selected: f.category == c.slug,
-                  onTap: () => widget.onFilterChanged(f.copyWith(
+            ...widget.categories.map(
+              (c) => _FilterRadio(
+                label: c.name,
+                selected: f.category == c.slug,
+                onTap: () => widget.onFilterChanged(
+                  f.copyWith(
                     category: c.slug,
                     clearCategory: f.category == c.slug,
                     page: 1,
-                  )),
-                )),
+                  ),
+                ),
+              ),
+            ),
             const Divider(),
             // ── Level ─────────────────────────────────────────────────────────
-            const Text('Trình độ',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const Text(
+              'Trình độ',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
             const SizedBox(height: 8),
             ...const [
               ('BEGINNER', 'Cơ bản'),
               ('INTERMEDIATE', 'Trung cấp'),
               ('ADVANCED', 'Nâng cao'),
-            ].map((l) => _FilterRadio(
-                  label: l.$2,
-                  selected: f.level == l.$1,
-                  onTap: () => widget.onFilterChanged(f.copyWith(
-                    level: l.$1,
-                    clearLevel: f.level == l.$1,
-                    page: 1,
-                  )),
-                )),
+            ].map(
+              (l) => _FilterRadio(
+                label: l.$2,
+                selected: f.level == l.$1,
+                onTap: () => widget.onFilterChanged(
+                  f.copyWith(level: l.$1, clearLevel: f.level == l.$1, page: 1),
+                ),
+              ),
+            ),
             const Divider(),
             // ── Price ─────────────────────────────────────────────────────────
-            const Text('Giá (₫)',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const Text(
+              'Giá (₫)',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -364,7 +434,9 @@ class _FilterSidebarState extends State<_FilterSidebar> {
                   child: TextField(
                     controller: _minCtrl,
                     decoration: const InputDecoration(
-                        hintText: 'Từ', contentPadding: EdgeInsets.all(8)),
+                      hintText: 'Từ',
+                      contentPadding: EdgeInsets.all(8),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -376,7 +448,9 @@ class _FilterSidebarState extends State<_FilterSidebar> {
                   child: TextField(
                     controller: _maxCtrl,
                     decoration: const InputDecoration(
-                        hintText: 'Đến', contentPadding: EdgeInsets.all(8)),
+                      hintText: 'Đến',
+                      contentPadding: EdgeInsets.all(8),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -387,15 +461,30 @@ class _FilterSidebarState extends State<_FilterSidebar> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  final min = double.tryParse(_minCtrl.text);
-                  final max = double.tryParse(_maxCtrl.text);
-                  widget.onFilterChanged(f.copyWith(
-                    minPrice: min,
-                    maxPrice: max,
-                    clearMinPrice: min == null,
-                    clearMaxPrice: max == null,
-                    page: 1,
-                  ));
+                  final minText = _minCtrl.text.trim();
+                  final maxText = _maxCtrl.text.trim();
+                  final min = minText.isEmpty ? null : double.tryParse(minText);
+                  final max = maxText.isEmpty ? null : double.tryParse(maxText);
+                  if ((minText.isNotEmpty && min == null) ||
+                      (maxText.isNotEmpty && max == null) ||
+                      (min != null && max != null && min > max)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Khoảng giá không hợp lệ.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
+                  widget.onFilterChanged(
+                    f.copyWith(
+                      minPrice: min,
+                      maxPrice: max,
+                      clearMinPrice: min == null,
+                      clearMaxPrice: max == null,
+                      page: 1,
+                    ),
+                  );
                 },
                 child: const Text('Áp dụng'),
               ),
@@ -457,6 +546,7 @@ class _CourseGrid extends StatelessWidget {
     required this.filter,
     required this.onPageChanged,
     required this.onRetry,
+    required this.onClearFilters,
   });
 
   final AsyncValue<CoursePage> asyncCourses;
@@ -464,13 +554,15 @@ class _CourseGrid extends StatelessWidget {
   final CatalogFilter filter;
   final void Function(int) onPageChanged;
   final VoidCallback onRetry;
+  final VoidCallback onClearFilters;
 
   @override
   Widget build(BuildContext context) {
     return asyncCourses.when(
       loading: () => LoadingGrid(
-          itemCount: 12,
-          crossAxisCount: crossAxisCount > 0 ? crossAxisCount : 1),
+        itemCount: 12,
+        crossAxisCount: crossAxisCount > 0 ? crossAxisCount : 1,
+      ),
       error: (e, _) => ErrorState(message: e.toString(), onRetry: onRetry),
       data: (page) {
         if (page.items.isEmpty) {
@@ -479,7 +571,7 @@ class _CourseGrid extends StatelessWidget {
             title: 'Không tìm thấy khóa học',
             subtitle: 'Thử thay đổi từ khóa hoặc điều kiện lọc.',
             action: OutlinedButton(
-              onPressed: onRetry,
+              onPressed: onClearFilters,
               child: const Text('Xóa bộ lọc'),
             ),
           );
@@ -536,13 +628,14 @@ class _Pagination extends StatelessWidget {
               height: 36,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      isActive ? AppTheme.primary : Colors.transparent,
-                  foregroundColor:
-                      isActive ? Colors.white : AppTheme.onSurface,
+                  backgroundColor: isActive
+                      ? AppTheme.primary
+                      : Colors.transparent,
+                  foregroundColor: isActive ? Colors.white : AppTheme.onSurface,
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6)),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                 ),
                 onPressed: () => onPage(p),
                 child: Text('$p'),

@@ -13,6 +13,23 @@ const sorts = {
   popularity: { enrollmentCount: 'desc' },
 };
 
+function courseEffectivePrice(course) {
+  const price = Number(course.price);
+  const salePrice = course.salePrice === null ? null : Number(course.salePrice);
+  return salePrice !== null && salePrice < price ? salePrice : price;
+}
+
+function sortCourses(items, sort) {
+  const direction = sort === 'price_asc' ? 1 : -1;
+  if (sort === 'price_asc' || sort === 'price_desc') {
+    return items.sort((a, b) => {
+      const difference = courseEffectivePrice(a) - courseEffectivePrice(b);
+      return difference === 0 ? a.id.localeCompare(b.id) : difference * direction;
+    });
+  }
+  return items;
+}
+
 function number(value, fallback, min = 0) {
   if (value === undefined) return fallback;
   const parsed = Number(value);
@@ -50,20 +67,58 @@ router.get('/courses', async (req, res, next) => {
     if (req.query.category) {
       const category = await prisma.category.findFirst({ where: { OR: [{ id: String(req.query.category) }, { slug: String(req.query.category) }], isActive: true }, select: { id: true } });
       if (!category) return res.json({ success: true, data: { items: [], pagination: { page, limit, total: 0, totalPages: 0 } } });
-      const children = await prisma.category.findMany({ where: { parentId: category.id, isActive: true }, select: { id: true } });
-      where.categoryId = { in: [category.id, ...children.map((child) => child.id)] };
-    }
-    if (minPrice !== undefined || maxPrice !== undefined || req.query.free === 'true') {
-      where.price = req.query.free === 'true' ? 0 : { ...(minPrice !== undefined ? { gte: minPrice } : {}), ...(maxPrice !== undefined ? { lte: maxPrice } : {}) };
+      // Include every active descendant, not just direct children, when the
+      // user filters by a parent category.
+      const categoryIds = [category.id];
+      let parentIds = [category.id];
+      while (parentIds.length) {
+        const children = await prisma.category.findMany({
+          where: { parentId: { in: parentIds }, isActive: true },
+          select: { id: true },
+        });
+        parentIds = children.map((child) => child.id);
+        categoryIds.push(...parentIds);
+      }
+      where.categoryId = { in: categoryIds };
     }
     if (req.query.level) where.level = req.query.level;
     if (minRating !== undefined) where.ratingAverage = { gte: minRating };
     if (req.query.instructor) where.instructorName = { contains: String(req.query.instructor).trim(), mode: 'insensitive' };
 
-    const [total, items] = await prisma.$transaction([
-      prisma.course.count({ where }),
-      prisma.course.findMany({ where, orderBy: [sorts[req.query.sort || 'newest'], { id: 'asc' }], skip: (page - 1) * limit, take: limit, include: { category: { select: { id: true, name: true, slug: true } } } }),
-    ]);
+    const sort = req.query.sort || 'newest';
+    const needsEffectivePriceEvaluation = minPrice !== undefined || maxPrice !== undefined || req.query.free === 'true' || sort === 'price_asc' || sort === 'price_desc';
+    let total;
+    let items;
+    if (needsEffectivePriceEvaluation) {
+      // Prisma cannot express `salePrice ?? price` as a portable field
+      // comparison. Evaluate the same price rule used by checkout/UI before
+      // slicing the result set, so filter, sort and pagination stay aligned.
+      let matches = await prisma.course.findMany({
+        where,
+        orderBy: [sorts[sort], { id: 'asc' }],
+        include: { category: { select: { id: true, name: true, slug: true } } },
+      });
+      matches = matches.filter((course) => {
+        const price = courseEffectivePrice(course);
+        if (req.query.free === 'true') return price === 0;
+        return (minPrice === undefined || price >= minPrice) &&
+          (maxPrice === undefined || price <= maxPrice);
+      });
+      sortCourses(matches, sort);
+      total = matches.length;
+      items = matches.slice((page - 1) * limit, page * limit);
+    } else {
+      [total, items] = await prisma.$transaction([
+        prisma.course.count({ where }),
+        prisma.course.findMany({
+          where,
+          orderBy: [sorts[sort], { id: 'asc' }],
+          skip: (page - 1) * limit,
+          take: limit,
+          include: { category: { select: { id: true, name: true, slug: true } } },
+        }),
+      ]);
+    }
     return res.json({ success: true, data: { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } } });
   } catch (error) { return next(error); }
 });

@@ -109,6 +109,36 @@ test('account locks after five failed login attempts', async () => {
   const updated = await prisma.user.findUnique({ where: { id: user.id } });
   assert.equal(updated.failedLoginAttempts, 5);
   assert.ok(updated.lockedUntil > new Date());
+  assert.equal(await prisma.auditLog.count({ where: { userId: user.id, action: 'ACCOUNT_LOCKED' } }), 1);
+});
+
+test('an expired lockout starts a fresh attempt sequence and successful login clears it', async () => {
+  const user = await createUser(`expired-lockout-${Date.now()}@example.test`);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { failedLoginAttempts: 5, lockedUntil: new Date(Date.now() - 1000) },
+  });
+  const csrfData = await csrf();
+
+  const failed = await jsonRequest('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfData.token, Cookie: csrfData.cookies },
+    body: JSON.stringify({ email: user.email, password: 'WrongPassword1!' }),
+  });
+  assert.equal(failed.response.status, 401);
+  let updated = await prisma.user.findUnique({ where: { id: user.id } });
+  assert.equal(updated.failedLoginAttempts, 1);
+  assert.equal(updated.lockedUntil, null);
+
+  const login = await jsonRequest('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfData.token, Cookie: csrfData.cookies },
+    body: JSON.stringify({ email: user.email, password: 'CorrectPassword1!' }),
+  });
+  assert.equal(login.response.status, 200);
+  updated = await prisma.user.findUnique({ where: { id: user.id } });
+  assert.equal(updated.failedLoginAttempts, 0);
+  assert.equal(updated.lockedUntil, null);
 });
 
 test('customer session is denied by administrator middleware', async () => {

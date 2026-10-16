@@ -16,9 +16,27 @@ router.get('/', async (req, res, next) => {
   try {
     const entitlements = await prisma.courseEntitlement.findMany({
       where: { userId: req.user.id, status: 'ACTIVE' }, orderBy: { grantedAt: 'desc' },
-      include: { course: { select: courseSummary } },
+      include: { course: { select: { ...courseSummary, lessons: { where: { isRequired: true }, select: { id: true } } } } },
     });
-    return res.json({ success: true, data: { items: entitlements } });
+    // Fetch completed lesson IDs for all relevant courses in one query
+    const courseIds = entitlements.map((e) => e.courseId);
+    const progressRecords = courseIds.length > 0
+      ? await prisma.courseProgress.findMany({ where: { userId: req.user.id, courseId: { in: courseIds } }, select: { courseId: true, lessonId: true } })
+      : [];
+    const completedMap = {};
+    for (const p of progressRecords) {
+      if (!completedMap[p.courseId]) completedMap[p.courseId] = new Set();
+      completedMap[p.courseId].add(p.lessonId);
+    }
+    const items = entitlements.map((e) => {
+      const requiredLessonIds = e.course.lessons.map((l) => l.id);
+      const completedIds = completedMap[e.courseId] || new Set();
+      const completed = requiredLessonIds.filter((id) => completedIds.has(id)).length;
+      const total = requiredLessonIds.length;
+      const { lessons: _lessons, ...courseWithoutLessons } = e.course;
+      return { ...e, course: courseWithoutLessons, progress: { completedLessons: completed, totalLessons: total, percentage: total === 0 ? 0 : Math.floor((completed / total) * 100), isComplete: total > 0 && completed >= total } };
+    });
+    return res.json({ success: true, data: { items } });
   } catch (error) { return next(error); }
 });
 

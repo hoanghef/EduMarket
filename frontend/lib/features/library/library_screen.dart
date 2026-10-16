@@ -135,8 +135,9 @@ class _LibraryList extends StatelessWidget {
         ),
         child: Center(
           child: ConstrainedBox(
-            constraints:
-                const BoxConstraints(maxWidth: Breakpoint.maxContentWidth),
+            constraints: const BoxConstraints(
+              maxWidth: Breakpoint.maxContentWidth,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -152,8 +153,11 @@ class _LibraryList extends StatelessWidget {
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.library_books_rounded,
-                          color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.library_books_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -187,10 +191,12 @@ class _LibraryList extends StatelessWidget {
                       spacing: spacing,
                       runSpacing: spacing,
                       children: entitlements
-                          .map((e) => SizedBox(
-                                width: itemWidth,
-                                child: _LibraryCard(entitlement: e),
-                              ))
+                          .map(
+                            (e) => SizedBox(
+                              width: itemWidth,
+                              child: _LibraryCard(entitlement: e),
+                            ),
+                          )
                           .toList(),
                     );
                   },
@@ -213,6 +219,10 @@ class _LibraryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final course = entitlement.course;
+    final progress = entitlement.progress;
+    final isComplete = progress.isComplete;
+    final hasStarted = progress.completedLessons > 0;
+    final hasTotalLessons = progress.totalLessons > 0;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -222,15 +232,53 @@ class _LibraryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Thumbnail
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: course.thumbnailUrl != null
-                  ? Image.network(
-                      course.thumbnailUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _ThumbnailPlaceholder(),
-                    )
-                  : _ThumbnailPlaceholder(),
+            Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: course.thumbnailUrl != null
+                      ? Image.network(
+                          course.thumbnailUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _ThumbnailPlaceholder(),
+                        )
+                      : _ThumbnailPlaceholder(),
+                ),
+                if (isComplete)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.success,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.workspace_premium,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 3),
+                          Text(
+                            'Hoàn thành',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
             Padding(
@@ -242,7 +290,9 @@ class _LibraryCard extends StatelessWidget {
                   if (course.category != null) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.surfaceVariant,
                         borderRadius: BorderRadius.circular(4),
@@ -280,22 +330,87 @@ class _LibraryCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
-
-                  // Continue learning button
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () =>
-                          context.go('/library/courses/${course.id}'),
-                      icon: const Icon(Icons.play_circle_outline, size: 18),
-                      label: const Text('Tiếp tục học'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        textStyle: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600),
+                  // Progress bar (only when course has lessons)
+                  if (hasTotalLessons) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${progress.completedLessons}/${progress.totalLessons} bài',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          '${progress.percentage}%',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isComplete
+                                ? AppTheme.success
+                                : AppTheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress.totalLessons == 0
+                            ? 0.0
+                            : progress.completedLessons / progress.totalLessons,
+                        minHeight: 5,
+                        backgroundColor: AppTheme.divider,
+                        valueColor: AlwaysStoppedAnimation(
+                          isComplete ? AppTheme.success : AppTheme.primary,
+                        ),
                       ),
                     ),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  // Action button
+                  SizedBox(
+                    width: double.infinity,
+                    child: isComplete
+                        ? FilledButton.icon(
+                            onPressed: () =>
+                                context.go('/library/courses/${course.id}'),
+                            icon: const Icon(Icons.replay, size: 18),
+                            label: const Text('Xem lại khóa học'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.success,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              textStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          )
+                        : FilledButton.icon(
+                            onPressed: () =>
+                                context.go('/library/courses/${course.id}'),
+                            icon: Icon(
+                              hasStarted
+                                  ? Icons.play_circle_outline
+                                  : Icons.school_outlined,
+                              size: 18,
+                            ),
+                            label: Text(
+                              hasStarted ? 'Tiếp tục học' : 'Bắt đầu học',
+                            ),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              textStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                   ),
                 ],
               ),

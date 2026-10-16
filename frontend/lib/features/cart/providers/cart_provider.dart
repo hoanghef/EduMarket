@@ -25,7 +25,9 @@ class CartRepository {
   }
 }
 
-final cartProvider = AsyncNotifierProvider<CartNotifier, CartModel>(CartNotifier.new);
+final cartProvider = AsyncNotifierProvider<CartNotifier, CartModel>(
+  CartNotifier.new,
+);
 
 class CartNotifier extends AsyncNotifier<CartModel> {
   @override
@@ -41,6 +43,11 @@ class CartNotifier extends AsyncNotifier<CartModel> {
   Future<void> refreshCart() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _fetchCart());
+  }
+
+  /// Clears the previous account's data synchronously during logout.
+  void clear() {
+    state = AsyncData(CartModel.empty);
   }
 
   Future<void> addToCart(String courseId) async {

@@ -117,7 +117,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => CourseCatalogScreen(
           initialQ: state.uri.queryParameters['q'],
           initialCategory: state.uri.queryParameters['category'],
+          initialLevel: state.uri.queryParameters['level'],
+          initialMinPrice: double.tryParse(
+            state.uri.queryParameters['minPrice'] ?? '',
+          ),
+          initialMaxPrice: double.tryParse(
+            state.uri.queryParameters['maxPrice'] ?? '',
+          ),
           initialSort: state.uri.queryParameters['sort'],
+          initialPage: int.tryParse(state.uri.queryParameters['page'] ?? ''),
         ),
       ),
 
@@ -165,6 +173,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/library/courses/:courseId/lessons/:lessonId',
         name: 'lessonPlayer',
         builder: (context, state) => LessonPlayerScreen(
+          key: ValueKey(state.pathParameters['lessonId']!),
           courseId: state.pathParameters['courseId']!,
           lessonId: state.pathParameters['lessonId']!,
         ),

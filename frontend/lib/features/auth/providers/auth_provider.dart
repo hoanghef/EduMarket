@@ -1,6 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
+import '../../cart/providers/cart_provider.dart';
+import '../../cart/providers/coupon_provider.dart';
+import '../../certificates/providers/certificate_provider.dart';
+import '../../library/providers/library_provider.dart';
+import '../../orders/providers/order_provider.dart';
+import '../../reviews/providers/review_provider.dart';
+import '../../wishlist/providers/wishlist_provider.dart';
 import '../models/user_model.dart';
 
 // ── Repository ───────────────────────────────────────────────────────────────
@@ -53,11 +60,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     final res = await _dio.post<Map<String, dynamic>>(
       '/api/auth/register',
-      data: {
-        'email': email,
-        'fullName': fullName,
-        'password': password,
-      },
+      data: {'email': email, 'fullName': fullName, 'password': password},
     );
     final data = res.data?['data'] as Map<String, dynamic>;
     return UserModel.fromJson(data['user'] as Map<String, dynamic>);
@@ -110,7 +113,8 @@ class AuthState {
   final bool isLoading;
   final String? errorMessage;
 
-  bool get isAuthenticated => status == AuthStatus.authenticated && user != null;
+  bool get isAuthenticated =>
+      status == AuthStatus.authenticated && user != null;
 
   AuthState copyWith({
     AuthStatus? status,
@@ -162,27 +166,20 @@ class AuthNotifier extends Notifier<AuthState> {
       final repo = ref.read(authRepositoryProvider);
       final user = await repo.login(email.trim().toLowerCase(), password);
       state = AuthState(status: AuthStatus.authenticated, user: user);
+      // Refresh data that can legitimately differ between two accounts.
+      ref.invalidate(cartProvider);
+      ref.invalidate(wishlistProvider);
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _mapDioError(e),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: _mapDioError(e));
       return false;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
 
-  Future<bool> register(
-    String email,
-    String fullName,
-    String password,
-  ) async {
+  Future<bool> register(String email, String fullName, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final repo = ref.read(authRepositoryProvider);
@@ -194,16 +191,10 @@ class AuthNotifier extends Notifier<AuthState> {
       state = AuthState(status: AuthStatus.authenticated, user: user);
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _mapDioError(e),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: _mapDioError(e));
       return false;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -216,8 +207,27 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (_) {
       // Clear state regardless of server logout response
     } finally {
+      _clearUserScopedState();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
+  }
+
+  void _clearUserScopedState() {
+    // Stateful providers are reset immediately so account A never flashes
+    // while the router is sending the user to login or account B is loading.
+    ref.read(cartProvider.notifier).clear();
+    ref.read(wishlistProvider.notifier).clear();
+    ref.read(couponProvider.notifier).removeCoupon();
+
+    // These providers are request/cache based. Invalidating them guarantees a
+    // subsequent signed-in user obtains only their own server-side data.
+    ref.invalidate(libraryProvider);
+    ref.invalidate(libraryCourseDetailProvider);
+    ref.invalidate(courseProgressProvider);
+    ref.invalidate(ordersProvider);
+    ref.invalidate(orderDetailProvider);
+    ref.invalidate(myCertificatesProvider);
+    ref.invalidate(myCourseReviewProvider);
   }
 
   void clearError() {
@@ -258,4 +268,6 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 }
 
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

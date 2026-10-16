@@ -42,6 +42,19 @@ router.use(requireAuth, requireCustomer);
 
 router.get('/', async (req, res, next) => {
   try {
+    // An entitlement may be granted after an item was put in the cart (for
+    // example by an administrator or a completed payment callback).  Remove
+    // those stale items before returning the cart so they cannot be purchased.
+    await prisma.cartItem.deleteMany({
+      where: {
+        cart: { userId: req.user.id },
+        course: {
+          entitlements: {
+            some: { userId: req.user.id, status: 'ACTIVE' },
+          },
+        },
+      },
+    });
     const cart = await findCart(req.user.id);
     return res.json({ success: true, data: { cart } });
   } catch (error) {

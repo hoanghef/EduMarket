@@ -31,17 +31,16 @@ class CartModel {
   final String userId;
   final List<CartItemModel> items;
 
-  CartModel({
-    required this.id,
-    required this.userId,
-    required this.items,
-  });
+  CartModel({required this.id, required this.userId, required this.items});
+
+  static final empty = CartModel(id: '', userId: '', items: const []);
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
     return CartModel(
       id: json['id'],
       userId: json['userId'],
-      items: (json['items'] as List?)
+      items:
+          (json['items'] as List?)
               ?.map((item) => CartItemModel.fromJson(item))
               .toList() ??
           [],
